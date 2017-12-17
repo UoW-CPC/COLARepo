@@ -1,0 +1,22 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+policy_types:
+  tosca.policies.Execution.Schedule:
+    derived_from: tosca.policies.Execution
+    description: executes the application following a cron job like syntax
+    properties:
+      target:
+        type: tosca.nodes
+        description: the node that will be affected by the policy
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: started
+      priority:
+        type: integer
+        description: the priority with which the policy will be executed
+        default: 100
+      cron_cmd:
+        type: string
+        description: a cron-job like cmd line
+  

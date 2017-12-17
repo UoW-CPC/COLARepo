@@ -1,0 +1,236 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+capability_types:
+  tosca.capabilities.MiCADO.Container.Docker:
+    derived_from: tosca.capabilities.Container.Docker
+    properties:
+      num_cpus:
+        type: float
+        required: false
+        constraints:
+          - greater_or_equal: 0.0
+
+  tosca.capabilities.MiCADO.Occopus.EC2.Cloud:
+    derived_from: tosca.capabilities.Container
+    properties:
+      region_name:
+        type: string
+        required: true
+      image_id:
+        type: string
+        required: true
+      instance_type:
+        type: string
+        required: true
+      key_name: 
+        type: string
+        required: false
+      security_groups_ids:
+        type: string
+        required: false
+      subnet_id:
+        type: string
+        required: false
+
+  tosca.capabilities.MiCADO.Occopus.CloudSigma.Cloud:
+    derived_from: tosca.capabilities.Container
+    properties:
+      libdrive_id:
+        type: string
+        required: true
+      vnc_password:
+        type: string
+        required: false
+      host_name: 
+        type: string
+        required: false
+      public_key_id:
+        type: string
+        required: false
+      firewall_policy:
+        type: string
+        required: false
+      description: 
+        type: string
+        required: false
+        description: overrides the capability type
+
+  tosca.capabilities.MiCADO.Occopus.Nova.Cloud:
+    derived_from: tosca.capabilities.Container
+    properties:
+      image_id: 
+        type: string
+        required: true
+      flavour_name:
+        type: string
+        required: true
+      tenant_name:
+        type: string
+        required: false
+      project_id:
+        type: string
+        required: false
+      user_domain_name: 
+        type: string
+        required: false
+      network_id:
+        type: string
+        required: false
+      server_name:
+        type: string
+        required: false
+      key_name:
+        type: string
+        required: false
+      security_groups: 
+        type: string
+        required: false
+      floating_ip:
+        type: string
+        required: false
+      floating_ip_pool:
+        type: string
+        required: false
+
+  tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud:
+    derived_from: tosca.capabilities.Container
+    properties:
+      deployment_id:
+        type: string
+        required: true
+      instance_type_id:
+        type: string
+        required: true
+      key_pair_id:
+        type: string
+        required: false
+      opened_port:
+        type: string
+        required: false
+
+
+
+data_types:
+  tosca.datatypes.MiCADO.Occopus.Cloud:
+    derived_from: tosca.datatypes.Root
+    properties:
+      interface_cloud: 
+        type: string
+        required: yes
+        constraints: 
+          - valid_values: [ 'ec2', 'nova', 'cloudsigma', 'cloudbroker' ]
+      endpoint_cloud:
+        type: string
+        required: yes
+      credentials: 
+        type: tosca.datatypes.credentials
+        required: false
+
+
+
+node_types:
+  tosca.nodes.MiCADO.Compute:
+    derived_from: tosca.nodes.Compute
+    properties:
+      cloud:
+        type: tosca.datatypes.MiCADO.Occopus.Cloud
+
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Occopus.Cloud
+
+  tosca.nodes.MiCADO.Occopus.CloudSigma.Compute:
+    derived_from: tosca.nodes.MiCADO.Compute
+    properties:
+      cloud:
+        type: tosca.datatypes.MiCADO.Occopus.Cloud
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Occopus.CloudSigma.Cloud
+
+
+  tosca.nodes.MiCADO.Occopus.EC2.Compute:
+    derived_from: tosca.nodes.MiCADO.Compute
+    properties:
+      cloud:
+        type: tosca.datatypes.MiCADO.Occopus.Cloud
+
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Occopus.EC2.Cloud
+
+
+  tosca.nodes.MiCADO.Occopus.CloudBroker.Compute:
+    derived_from: tosca.nodes.MiCADO.Compute
+    properties:
+      cloud:
+        type: tosca.datatypes.MiCADO.Occopus.Cloud
+
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud
+
+
+  tosca.nodes.MiCADO.Container.Application.Docker:
+    derived_from: tosca.nodes.Container.Application.Docker
+    description: description of main container
+    properties:
+      cmd:
+        type: string
+        description: command line to be executed by the container.
+        required: false
+      exposed_port:
+        type: integer
+        description: port exposed inside container
+        range: [ 32768, 61000 ]
+        required: false
+      env:
+        type: map
+        description: map of all the environment variable required.
+        required: false
+        entry_schema:
+          type: string
+      constraints:
+        required: false
+        type: list
+        entry_schema:
+          type: list
+          entry_schema:
+            type: string
+      labels:
+        required: false
+        type: map
+        entry_schema:
+          type: string
+      privileged:
+        type: boolean
+        required: false
+        default: false
+      force_pull_image:
+        type: boolean
+        required: false
+        default: false
+      other_options:
+        type: map
+        required: false
+        entry_schema:
+          type: string
+    attributes:
+      ip_address:
+        type: string
+      port:
+        type: integer
+
+    requirements:
+      - host:
+          capability: tosca.capability.Container
+          node: tosca.nodes.MiCADO.Compute
+          relationship: tosca.relationships.HostedOn
+
+
+
+  tosca.nodes.MiCADO.Container.Runtime.Docker:
+    derived_from: tosca.nodes.SoftwareComponent
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Container.Docker

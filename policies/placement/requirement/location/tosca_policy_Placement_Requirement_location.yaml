@@ -1,0 +1,26 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+policy_types:
+  tosca.policies.Placement.Requirement.Location:
+    derived_from: tosca.policies.Placement
+    description: defines the geographical location where the container can be deployed
+    properties:
+      target:
+        type: tosca.nodes
+        description: the container that will be affected by the policy
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: Created
+      priority: 
+        type: integer
+        description: the priority with which the policy will be executed 
+        default: 100
+      Trigger_1_Namespace: 
+        type: string
+        description: the service that will return the geographical location of the service 
+      accepted_domaine:
+        type: list
+        description: list of the acceptable geographical locations
+        schema_entry:
+          type: string

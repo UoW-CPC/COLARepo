@@ -1,0 +1,34 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+
+policy_types:
+  tosca.policies.Scaling.Performance.Connection:
+    derived_from: tosca.policies.Scaling
+    description: spins one instance when threshold connection is reached
+    properties:
+      target:
+        type: tosca.nodes
+        description: the container affected by the policy
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: started
+      priority:
+        type: integer
+        description: the priority with which the policy will be exectued
+        default: 100
+      trigger_1_ID:
+        type: string
+        description: defines the trigger (theshold that will spin up/down the instances)
+        default: Connection_Threshold
+      trigger_1_Namespace:
+        type: string
+        description: defines the namespace of the service that is monitoring the connections
+        default: Connection_Meter
+      max_connection:
+        type: integer
+        description: defines the maximum number of connections above which the new instance will be deployed
+      min_connection:
+        type: integer
+        description: defines the minimum number of connections above which the new isntance will be undeployed
+

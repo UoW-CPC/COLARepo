@@ -1,0 +1,154 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - ../nodes/custom_types.yaml
+  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - ../policies/placement/requirement/location/tosca_policy_Placement_Requirement_Location.yaml
+
+
+repositories:
+  docker_hub: https://hub.docker.com/
+
+topology_template:
+  inputs:
+    docker_image:
+      type: string
+      description: Docker image to run
+      required: yes
+      default: "magician"
+    port_exposed:
+      type: integer
+      description: port_exposed
+      required: yes
+      default: 8080
+    host_cpu:
+      type: integer
+      description: cpu of the host
+      required: yes
+      default: 2
+    host_version:
+      type: version
+      description: version of host
+      required: yes
+      default: 16.0
+    url_list:
+      type: list
+      description: list of url
+      default: ["http://url_for_solr", "http://url_for_tomecat", "http://url_for_webpage"]
+      entry_schema:
+        type: string
+    host_mem:
+      type: scalar-unit.size
+      description: host mem capacity
+      required: yes
+      default: 4 GB
+    host_disk:
+      type: scalar-unit.size
+      description: host disk capacity
+      required: yes
+      default: 50 GB
+    libdrive_id:
+      type: string
+      description: id of the instance image to launch
+      required: yes
+      default: "some id"
+    max_cpu_consumption:
+      type: float
+      description: max cpu consumption
+      required: yes
+      default: 0.8
+    min_cpu_consumption:
+      type: float
+      description: min cpu consumption
+      required: yes
+      default: 0.2
+    scale_up_max_time:
+      type: scalar-unit.time
+      description: max time of scale scale up
+      required: yes
+      default: 5 m
+    scale_down_max_time: 
+      type: scalar-unit.time
+      description: max time of scale scale down
+      required: yes
+      default: 5 m
+    location:
+      type: string
+      description: location to launch the instance
+      required: yes
+      default: Europe
+
+  node_templates:
+    Inycom:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        privileged: true
+        exposed_port: { get_input: port_exposed }
+ 
+
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: { get_input: docker_image }
+          repository: docker_hub
+      requirements:
+        - host: 
+            node: VM
+            relationship: tosca.relationships.HostedOn
+
+
+    VM:
+      type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
+
+      properties:
+        cloud:
+          interface_cloud: cloudsigma
+          endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
+
+      capabilities:
+        host:
+          properties:
+            num_cpus: { get_input: host_cpu }
+            disk_size: { get_input: host_disk }
+            mem_size: { get_input: host_mem }
+            libdrive_id: { get_input: libdrive_id }
+
+  outputs:
+    ip_address:
+      value: { get_attribute: [ Inycom, ip_address ]}
+    port:
+      value: { get_attribute: [ Inycom, port ]}
+
+
+  policies:
+    - scalability:
+        type: tosca.policies.Scaling.Performance.Consumption
+        properties:
+          target: Inycom
+          stage: Execution
+          priority: 100
+          trigger_1_ID: estimate_completion_time
+          trigger_1_Namespace: prometheus
+          max_cpu_consumption: { get_input: max_cpu_consumption }
+          scale_up_max_time: { get_input: scale_up_max_time }
+          min_cpu_consumption: { get_input: min_cpu_consumption }
+          scale_down_max_time: { get_input: scale_down_max_time }
+
+    - deployment_connection:
+        type: tosca.policies.Placement.Requirement.Connection
+        properties:
+          target: Inycom
+          stage: Deployment
+          properties: 100
+          url: { get_input: url_list }
+
+    - deployment_location:
+        type: tosca.policies.Placement.Requirement.Location
+        properties:
+          target: VM
+          stage: Deployment
+          priority: 100
+          trigger_1_Namespace: prometheus
+          accepted_domaine: { get_input: location }
+

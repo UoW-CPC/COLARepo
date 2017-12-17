@@ -1,0 +1,22 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - tosca_policy_scalability_performance_completion.yaml
+
+policy_types:
+  tosca.policies.scalability.performance.completion.job:
+    derived_from: tosca.policies.scalability.performance.completion
+    description: spin one instance when estimate of completion time is above thershold
+    properties:
+      estimated_completion_time: 
+        type: scalar-unit.time
+        description: the estimated time for the experiment
+      estimated_completion_time_one_job:
+        type: scalar-unit.the
+        description: the estimated time for one job
+      total_budget:
+        type: float
+        description: the total_budget for the experiment
+      cut_off_percentage:
+        type: float
+        description: the percentage allowance to go over the total_budget

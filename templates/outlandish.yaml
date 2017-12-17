@@ -1,0 +1,228 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - ../nodes/custom_types.yaml
+  - ../policies/execution/tosca_policy_execution_schedule.yaml
+  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+
+repositories:
+  docker_hub: https://hub.docker.com/
+
+topology_template:
+  inputs:
+    docker_image_afa:
+      type: string
+      description: Docker image to run
+      required: yes
+      default: "image_to_use"
+
+    docker_image_cache_service:
+      type: string
+      description: Docker image to run
+      required: yes
+      default: "image_to_use"
+
+    ENVIR_A:
+      type: string
+      description: ENVIR_A string
+      default: "some environment_variables"
+
+    ENVIR_B:
+      type: string
+      description: ENVIR_B string
+      default: "some environment_variables"
+
+    ENVIR_C:
+      type: string
+      description: ENVIR_C string
+      default: "some environment_variables"
+
+    url_list_caching:
+      type: list
+      description: list of url
+      default: ["http://external_db:port/", " http://wordpress_db:port/", "http://box_office_db:port/","http://Gmail_api:port/"]
+      entry_schema:
+        type: string
+    url_list_afa:
+      type: list
+      description: list of url for afa component to connect to
+      default: ["http://wordpress_db:port/","http://box_office_db:port/", "http://proxy_url:port/"]
+      entry_schema:
+        type: string
+
+    port_exposed:
+      type: integer
+      description: port_exposed
+      required: yes
+      default: 8080
+    host_mem:
+      type: scalar-unit.size
+      description: host mem capacity
+      required: yes
+      default: 4 GB
+    host_disk:
+      type: scalar-unit.size
+      description: host disk capacity
+      required: yes
+      default: 50 GB
+    libdrive_id:
+      type: string
+      description: id of the instance image to launch
+      required: yes
+      default: "some id"
+    host_cpu:
+      type: integer
+      description: cpu of the host
+      required: yes
+      default: 2
+    max_completion_time:
+      type: integer
+      description: estmated max completion time
+      required: yes
+      default: 10
+    cmd_cron:
+      type: string
+      description: command to run the cron job
+      required: yes
+      default: "some command"
+
+    max_cpu_consumption:
+      type: float
+      description: max cpu consumption
+      required: yes
+      default: 0.8
+    
+    min_cpu_consumption:
+      type: float
+      description: min cpu consumption
+      required: yes
+      default: 0.2
+
+    scale_up_max_time:
+      type: scalar-unit.time
+      description: max time to scale up
+      required: yes
+      default: 5 m
+
+    scale_down_max_time:
+      type: scalar-unit.time
+      description: max time scale down
+      required: yes
+      default: 5 m
+
+
+
+  node_templates:
+    AFA:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        exposed_port: { get_input: port_exposed }
+        env:
+          ENVIR_A : { get_input: input_a }
+          ENVIR_B : { get_input: input_b }
+          ENVIR_N : { get_input: input_n }
+
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: { get_input: docker_image_afa  }
+          repository: docker_hub
+      requirements:
+        - host: 
+            node: VM
+            relationship: tosca.relationships.HostedOn
+
+    Caching_service:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        exposed_port: { get_input: port_exposed }
+        env:
+          ENVIR_A : { get_input: input_a }
+          ENVIR_B : { get_input: input_b }
+          ENVIR_N : { get_input: input_n }
+
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: { get_input: docker_image_cache_service }
+          repository: docker_hub
+      requirements:
+        - host: 
+            node: VM
+            relationship: tosca.relationships.HostedOn
+
+
+    VM:
+      type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
+
+      properties:
+        cloud:
+          interface_cloud: cloudsigma
+          endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
+
+      capabilities:
+        host:
+          properties:
+            num_cpus: { get_input: host_cpu }
+            disk_size: { get_input: host_disk }
+            mem_size: { get_input: host_mem }
+            libdrive_id: { get_input: libdrive_id }
+
+  outputs:
+    ip_address:
+      value: { get_attribute: [ AFA, ip_address ]}
+    port:
+      value: { get_attribute: [ AFA, port ]}
+
+  policies:
+    - consumption:
+        type: tosca.policies.Scaling.Performance.Consumption
+        properties: 
+          target: AFA
+          stage: started
+          priority: 100
+          trigger_1_ID: estimate_completion_time
+          trigger_1_Namespace: prometheus
+          max_cpu_consumption: { get_input: max_cpu_consumption }
+          scale_up_max_time: { get_input: scale_up_max_time }
+          min_cpu_consumption: { get_input: min_cpu_consumption }
+          scale_down_max_time: { get_input: scale_down_max_time }
+
+    - execution:
+        type: tosca.policies.Execution.Schedule
+        properties:
+          target: Caching_service
+          stage: started
+          priority: 100
+          cron_cmd: { get_input: cmd_cron }
+
+    - scalability:
+        type: tosca.policies.Scaling.Performance.Completion
+        properties:
+          target: Caching_service
+          stage: started
+          priority: 100
+          trigger_1_ID: estimate_completion_time
+          trigger_1_Namespace: cache_server
+          max_estimation_time: { get_input: max_completion_time }
+
+
+    - deployment_connection_AFA:
+        type: tosca.policies.Placement.Requirement.Connection
+        properties:
+          target: AFA
+          stage: created
+          properties: 100
+          url: { get_input: url_list_afa }
+
+
+    - deployment_connection_Caching:
+        type: tosca.policies.Placement.Requirement.Connection
+        properties:
+          target: Caching_service
+          stage: created
+          properties: 100
+          url: { get_input: url_list_caching }
+

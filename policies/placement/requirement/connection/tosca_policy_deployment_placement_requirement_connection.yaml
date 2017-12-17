@@ -1,0 +1,23 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+policy_types:
+  tosca.policies.Placement.Requirement.Connection:
+    derived_from: tosca.policies.Placement
+    description: defines the connection requirements for the container
+    properties:
+      target: 
+        type: tosca.nodes
+        description: the container that will be affected by the policy
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: created
+      priority:
+        type: integer
+        description: the priority with which the policy will be executed
+        default: 100
+      url:
+        type: list
+        description: address or list of addresses that needs to be reachable by the container
+        entry_schema:
+          type: string
