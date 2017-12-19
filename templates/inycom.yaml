@@ -124,8 +124,8 @@ topology_template:
   policies:
     - scalability:
         type: tosca.policies.Scaling.Performance.Consumption
+        targets: [ Inycom ]
         properties:
-          target: Inycom
           stage: Execution
           priority: 100
           trigger_1_ID: estimate_completion_time
@@ -137,16 +137,16 @@ topology_template:
 
     - deployment_connection:
         type: tosca.policies.Placement.Requirement.Connection
+        targets: [ Inycom ]
         properties:
-          target: Inycom
           stage: Deployment
           properties: 100
           url: { get_input: url_list }
 
     - deployment_location:
         type: tosca.policies.Placement.Requirement.Location
+        targets: [ VM ]
         properties:
-          target: VM
           stage: Deployment
           priority: 100
           trigger_1_Namespace: prometheus

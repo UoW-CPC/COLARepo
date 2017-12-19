@@ -5,9 +5,6 @@ policy_types:
     derived_from: tosca.policies.Placement
     description: defines the geographical location where the container can be deployed
     properties:
-      target:
-        type: tosca.nodes
-        description: the container that will be affected by the policy
       stage:
         type: string
         description: the stage that will be affected by the policy

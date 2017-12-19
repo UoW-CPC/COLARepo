@@ -1,0 +1,46 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+# imports: 
+#   - ./tosca_policy_scalability_performance_completion.yaml
+
+policy_types:
+  tosca.policies.Scaling.Performance.Completion.Job:
+    #derived_from: tosca.policies.Scaling.Performance.Completion
+    # derived_from: tosca.policies.Scaling
+    # description: spins one instance when threshold connection is reached
+    # properties:
+    #   test:
+    #     type: string
+    #     description: test
+    #     required: false
+    #   estimated_completion_time_one_job:
+    #     type: scalar-unit.the
+    #     description: the estimated time for one job
+    #     required: false
+    #   total_budget:
+    #     type: float
+    #     description: the total_budget for the experiment
+    #     required: false
+    #   cut_off_percentage:
+    #     type: float
+    #     description: the percentage allowance to go over the total_budget
+    #     required: false
+    derived_from: tosca.policies.Placement
+    description: defines the connection requirements for the container
+    properties:
+      target: 
+        type: tosca.nodes
+        description: the container that will be affected by the policy
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: created
+      priority:
+        type: integer
+        description: the priority with which the policy will be executed
+        default: 100
+      url:
+        type: list
+        description: address or list of addresses that needs to be reachable by the container
+        entry_schema:
+          type: string

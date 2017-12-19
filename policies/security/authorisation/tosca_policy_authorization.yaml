@@ -5,9 +5,6 @@ policy_types:
     derived_from: tosca.policies.Security
     description: authorization policy derived from security
     properties:
-      target:
-        type: tosca.nodes
-        description: the levels that will be affected by the policy
       stage:
         type: string
         description: The stage that will be affected by the policy

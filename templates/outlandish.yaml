@@ -42,7 +42,7 @@ topology_template:
     url_list_caching:
       type: list
       description: list of url
-      default: ["http://external_db:port/", " http://wordpress_db:port/", "http://box_office_db:port/","http://Gmail_api:port/"]
+      default: ["http://external_db:port/", " http://wordpress_db:port/", "http://box_office_db:port/"]
       entry_schema:
         type: string
     url_list_afa:
@@ -179,8 +179,8 @@ topology_template:
   policies:
     - consumption:
         type: tosca.policies.Scaling.Performance.Consumption
+        targets: [ AFA ]
         properties: 
-          target: AFA
           stage: started
           priority: 100
           trigger_1_ID: estimate_completion_time
@@ -192,16 +192,16 @@ topology_template:
 
     - execution:
         type: tosca.policies.Execution.Schedule
+        targets: [ Caching_service ]
         properties:
-          target: Caching_service
           stage: started
           priority: 100
           cron_cmd: { get_input: cmd_cron }
 
     - scalability:
         type: tosca.policies.Scaling.Performance.Completion
+        targets: [ Caching_service ]
         properties:
-          target: Caching_service
           stage: started
           priority: 100
           trigger_1_ID: estimate_completion_time
@@ -211,8 +211,8 @@ topology_template:
 
     - deployment_connection_AFA:
         type: tosca.policies.Placement.Requirement.Connection
+        targets: [ Caching_service ]
         properties:
-          target: AFA
           stage: created
           properties: 100
           url: { get_input: url_list_afa }
@@ -220,8 +220,8 @@ topology_template:
 
     - deployment_connection_Caching:
         type: tosca.policies.Placement.Requirement.Connection
+        targets: [ Caching_service ]
         properties:
-          target: Caching_service
           stage: created
           properties: 100
           url: { get_input: url_list_caching }
