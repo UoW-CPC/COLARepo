@@ -232,8 +232,15 @@ node_types:
         type: string
       port:
         type: integer
+    capabilities:
+      service: 
+        type: tosca.capabilities.Endpoint
 
     requirements:
+      - service:
+          capability: tosca.capabilities.Endpoint
+          node: tosca.nodes.MiCADO.Compute
+          relationship: tosca.relationships.ConnectsTo
       - host:
           capability: tosca.capability.Container
           node: tosca.nodes.MiCADO.Compute

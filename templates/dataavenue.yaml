@@ -68,6 +68,9 @@ topology_template:
            file: { get_input: docker_image }
            repository: docker_hub
        requirements:
+         - service: 
+             node: data_avenue
+             relationship: tosca.relationships.ConnectsTo
          - host: 
              node: VM
              relationship: tosca.relationships.HostedOn
@@ -81,6 +84,9 @@ topology_template:
            file: { get_input: docker_image }
            repository: docker_hub
        requirements:
+         - service:
+             node: mongo
+             relationship: tosca.relationship.ConnectsTo
          - host: 
              node: VM
              relationship: tosca.relationships.HostedOn
