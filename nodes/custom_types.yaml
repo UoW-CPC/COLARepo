@@ -170,7 +170,19 @@ node_types:
       host:
         type: tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud
 
+  tosca.nodes.MiCADO.Occopus.Nova.Compute:
+    derived_from: tosca.nodes.MiCADO.Compute
+    properties:
+      cloud:
+        type: tosca.datatypes.MiCADO.Occopus.Cloud
 
+    capabilities:
+      host:
+        type: tosca.capabilities.MiCADO.Occopus.Nova.Cloud
+
+
+  ## Node Type to describe the container node (it will contains the command 
+  ## line to pass to the docker) 
   tosca.nodes.MiCADO.Container.Application.Docker:
     derived_from: tosca.nodes.Container.Application.Docker
     description: description of main container
@@ -226,11 +238,3 @@ node_types:
           capability: tosca.capability.Container
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.HostedOn
-
-
-
-  tosca.nodes.MiCADO.Container.Runtime.Docker:
-    derived_from: tosca.nodes.SoftwareComponent
-    capabilities:
-      host:
-        type: tosca.capabilities.MiCADO.Container.Docker

@@ -1,5 +1,8 @@
+## declaration of the tosca version
 tosca_definitions_version: tosca_simple_yaml_1_0
 
+
+## imports section defines the tosca files that are needed to parsed
 imports:
   - ../nodes/custom_types.yaml
   - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
@@ -7,10 +10,17 @@ imports:
   - ../policies/placement/requirement/location/tosca_policy_Placement_Requirement_Location.yaml
 
 
+## Url of the main repository fir the location of the docker Images. The user can specify her/his own 
+## repository by adding another line with a name and url eg: my_repo: http://my_repo/
 repositories:
   docker_hub: https://hub.docker.com/
 
+
+## the topology template start here
 topology_template:
+
+  ## The input section starts here. This is where all the values 
+  ## that may be set in the topology template are grouped together.
   inputs:
     docker_image:
       type: string
@@ -79,33 +89,46 @@ topology_template:
       required: yes
       default: Europe
 
+
+  ## The is the node template section. Where the node that compose 
+  ## the topology and their relationships are specified
   node_templates:
+   
+    ## This specifies the Docker Image node type and its parameters
     Inycom:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
         privileged: true
         exposed_port: { get_input: port_exposed }
- 
-
+  
+      ## This is the artefact of the Docker Image node type which represents 
+      ## the Docker Image in either the common or personal docker hub (specified repository)
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
           file: { get_input: docker_image }
           repository: docker_hub
+
+      ## This specifies the requirements to select the Virtual Machine on which the 
+      ## Docker Image will be executed.
       requirements:
         - host: 
             node: VM
             relationship: tosca.relationships.HostedOn
 
 
+    ## This specifies the Virtual Machine Image node type and its parameters
     VM:
       type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
 
+      ## This specifies the properties of the Virtual Machine Image node type
       properties:
         cloud:
           interface_cloud: cloudsigma
           endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
 
+      ## This specifies the capabilities of the Virtual Machine Image node type which 
+      ## are matched against the requirements of the Docker Image type
       capabilities:
         host:
           properties:
@@ -114,6 +137,8 @@ topology_template:
             mem_size: { get_input: host_mem }
             libdrive_id: { get_input: libdrive_id }
 
+
+  ## This specifies the output that are defined by the attribute of the Output
   outputs:
     ip_address:
       value: { get_attribute: [ Inycom, ip_address ]}
@@ -121,6 +146,7 @@ topology_template:
       value: { get_attribute: [ Inycom, port ]}
 
 
+  ## This specifies the policies that are applied to the different nodes of this topology template
   policies:
     - scalability:
         type: tosca.policies.Scaling.Performance.Consumption

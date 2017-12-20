@@ -5,7 +5,7 @@ imports:
 policy_types:
   tosca.policies.Scaling.Performance.Completion.Job:
     derived_from: tosca.policies.Scaling.Performance.Completion
-    description: spins one instance when threshold connection is reached
+    description: scales up and down the instances of the jobs to meet the defined deadline within a cost maximum defines as budget times cut-off percentage
     properties:
       estimated_completion_time_one_job:
         type: scalar-unit.time
