@@ -1,0 +1,35 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - ../nodes/custom_types.yaml
+  ## TODO add the path to the files you want to import
+
+repositories:
+  docker_hub: https://hub.docker.com/
+  ## Main repo, can be modify for private Registry.
+  ## where docker images are stored.
+
+topology_template:
+  inputs:
+  ## TODO add the required inputs for each wanted use values 
+  ## to be implemented in the node_templates and to the policies
+  ## use this syntax { get_input: NAME_OF_THE_VALUE } 
+  ## also at the moment we do not have GUI, the GUI will be used 
+  ## to enter the inputs value in fields, so it is required for 
+  ## now that you use default value to pass the value to the 
+  ## infrastructure 
+
+  node_templates:
+  ## TODO add as many node required of container node type and 
+  ## adjust the parameters in functions of your applications 
+  ## docker CLI
+
+  ## TODO add the Compute ressource node type to define on which 
+  ## kind of instance you want to launch in the infrastructure
+
+  outputs:
+  ## add the outputs provided during the run of the application
+  ## the address of the server and other
+
+  policies:
+  ## import the policies you want, and implement its values
