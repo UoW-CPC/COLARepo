@@ -1,6 +1,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 capability_types:
+  ## capabilty types for Docker
   tosca.capabilities.MiCADO.Container.Docker:
     derived_from: tosca.capabilities.Container.Docker
     properties:
@@ -9,7 +10,8 @@ capability_types:
         required: false
         constraints:
           - greater_or_equal: 0.0
-
+ 
+  ## capabilty types for EC2
   tosca.capabilities.MiCADO.Occopus.EC2.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
@@ -32,6 +34,7 @@ capability_types:
         type: string
         required: false
 
+  ## capabilty types for CloudSigma
   tosca.capabilities.MiCADO.Occopus.CloudSigma.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
@@ -55,6 +58,7 @@ capability_types:
         required: false
         description: overrides the capability type
 
+  ## capabilty types for Nova
   tosca.capabilities.MiCADO.Occopus.Nova.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
@@ -91,7 +95,8 @@ capability_types:
       floating_ip_pool:
         type: string
         required: false
-
+ 
+  ## capabilty types for CloudBroker
   tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
@@ -111,6 +116,7 @@ capability_types:
 
 
 data_types:
+  ## Daattype that describe the main cloud properties
   tosca.datatypes.MiCADO.Occopus.Cloud:
     derived_from: tosca.datatypes.Root
     properties:
@@ -129,6 +135,8 @@ data_types:
 
 
 node_types:
+  ## Node type that describe the Virtual Machine on which 
+  ## the container is supposed to run
   tosca.nodes.MiCADO.Compute:
     derived_from: tosca.nodes.Compute
     properties:
@@ -139,6 +147,7 @@ node_types:
       host:
         type: tosca.capabilities.MiCADO.Occopus.Cloud
 
+  ## specific node type to describe the instance on  CloudSigma
   tosca.nodes.MiCADO.Occopus.CloudSigma.Compute:
     derived_from: tosca.nodes.MiCADO.Compute
     properties:
@@ -148,7 +157,7 @@ node_types:
       host:
         type: tosca.capabilities.MiCADO.Occopus.CloudSigma.Cloud
 
-
+  ## specific node type to describe the instance on  EC2
   tosca.nodes.MiCADO.Occopus.EC2.Compute:
     derived_from: tosca.nodes.MiCADO.Compute
     properties:
@@ -159,7 +168,7 @@ node_types:
       host:
         type: tosca.capabilities.MiCADO.Occopus.EC2.Cloud
 
-
+  ## specific node type to describe the instance on  CloudBroker
   tosca.nodes.MiCADO.Occopus.CloudBroker.Compute:
     derived_from: tosca.nodes.MiCADO.Compute
     properties:
@@ -170,6 +179,7 @@ node_types:
       host:
         type: tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud
 
+  ## specific node type to describe the instance on  Nova
   tosca.nodes.MiCADO.Occopus.Nova.Compute:
     derived_from: tosca.nodes.MiCADO.Compute
     properties:
@@ -181,7 +191,7 @@ node_types:
         type: tosca.capabilities.MiCADO.Occopus.Nova.Cloud
 
 
-  ## Node Type to describe the container node (it will contains the command 
+  ## Node Type to describe the docker container node (it will contains the command 
   ## line to pass to the docker) 
   tosca.nodes.MiCADO.Container.Application.Docker:
     derived_from: tosca.nodes.Container.Application.Docker
