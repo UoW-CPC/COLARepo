@@ -1,0 +1,29 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - ../nodes/custom_types.yaml
+  ## TODO add the path to the files you want to import
+
+repositories:
+  docker_hub: https://hub.docker.com/
+  ## TODO Url of the main repository fir the location of the docker Images. The user can specify her/his own 
+  ## repository by adding another line with a name and url eg: my_repo: http://my_repo/
+
+topology_template:
+  inputs:
+  ## TODO add the required inputs for each value that you want the users to be able to set
+  ## such values need to be implemented in the node_templates and/or in the policies
+  ## use this syntax { get_input: NAME_OF_THE_VALUE } 
+  ## For this version use the default value to set the inputs.
+
+  node_templates:
+  ## TODO For each of the docker images you want to deploy on MiCADO use both node types 
+  ## that describe Docker and the Virtual Machine with the correct properties defining all 
+  ## the relationships between each node that are linked together 
+
+
+  outputs:
+  ## TODO add the outputs provided during the run of the application
+
+  policies:
+  ## TODO import the policies you want, and implement its values
