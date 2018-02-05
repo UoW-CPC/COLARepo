@@ -97,14 +97,14 @@ topology_template:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
         privileged: true
-        exposed_port: { get_input: port_exposed }
+        exposed_port:  get_input: port_exposed 
   
       ## This is the artefact of the Docker Image node type which represents 
       ## the Docker Image in either the common or personal docker hub (specified repository)
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file: { get_input: docker_image }
+          file:  get_input: docker_image 
           repository: docker_hub
 
       ## This specifies the requirements to select the Virtual Machine on which the 
