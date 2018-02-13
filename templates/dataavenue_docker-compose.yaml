@@ -1,0 +1,22 @@
+networks: {}
+services:
+  data_avenue:
+    image: data_avenue
+    ports:
+    - 6464:6464
+    privileged: false
+  mysql:
+    environment:
+      MYSQL_DATABASE: DEFAULT_HERE
+      MYSQL_PASSWORD: DEFAULT_HERE
+      MYSQL_ROOT_PASSWORD: DEFAULT_HERE
+      MYSQL_USER: DEFAULT_HERE
+    image: mysql
+    ports:
+    - 3306:3306
+    privileged: false
+  proxy:
+    image: haproxy
+    privileged: false
+version: '3'
+volumes: {}
