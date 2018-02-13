@@ -2,7 +2,7 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
   - ../nodes/custom_types.yaml
-  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
 
 
 repositories:
@@ -11,20 +11,20 @@ repositories:
 topology_template:
   inputs:
     port_exposed_da:
-      type: integer
+      type: list
       description: port exposed for data_avenue
       required: yes
-      default: 8080
+      default: ["8080:8080"]
     port_exposed_mysql:
-      type: integer
+      type: list
       description: port exposed for mysql
       required: yes
-      default: 3306
+      default: ["3306:3306"]
     docker_image_proxy:
       type: string
       description: name of docker image of proxy
       required: yes
-      default: haproxy 
+      default: haproxy
     docker_image_mysql:
       type: string
       description: name of docker image of mysql
@@ -34,7 +34,7 @@ topology_template:
       type: string
       description: name of docker image of data_avenue
       required: yes
-      default: data_avenue 
+      default: data_avenue
     host_mem:
       type: scalar-unit.size
       description: host mem capacity
@@ -75,7 +75,7 @@ topology_template:
       description: environment variable to set the password
       required: yes
       default: DEFAULT_HERE
-    
+
 
 
     max_cpu_consumption:
@@ -105,53 +105,41 @@ topology_template:
   node_templates:
     proxy:
        type: tosca.nodes.MiCADO.Container.Application.Docker
-       artifacts:
-         image:
-           type: tosca.artifacts.Deployment.Image.Container.Docker
-           file: { get_input: docker_image_proxy }
-           repository: docker_hub
+       properties:
+           image: { get_input: docker_image_proxy }
        requirements:
-         - service: 
+         - service:
              node: data_avenue
              relationship: tosca.relationships.ConnectsTo
-         - host: 
+         - host:
              node: VM
              relationship: tosca.relationships.HostedOn
 
     data_avenue:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
-         exposed_port: { get_input: port_exposed_da }
-       artifacts:
-         image:
-           type: tosca.artifacts.Deployment.Image.Container.Docker
-           file: { get_input: docker_image_data_avenue }
-           repository: docker_hub
+         ports: { get_input: port_exposed_da }
+         image: { get_input: docker_image_data_avenue }
        requirements:
          - service:
              node: mysql
              relationship: tosca.relationship.ConnectsTo
-         - host: 
+         - host:
              node: VM
              relationship: tosca.relationships.HostedOn
 
     mysql:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
-         env:
+         environment:
            MYSQL_ROOT_PASSWORD: { get_input: mysql_root_password }
            MYSQL_DATABASE: { get_input: mysql_database }
            MYSQL_USER: { get_input: mysql_user }
            MYSQL_PASSWORD: { get_input: mysql_password }
-         exposed_port: { get_input: port_exposed_mysql }
-
-       artifacts:
-         image:
-           type: tosca.artifacts.Deployment.Image.Container.Docker
-           file: { get_input: docker_image_mysql }
-           repository: docker_hub
+         ports: { get_input: port_exposed_mysql }
+         image: { get_input: docker_image_mysql }
        requirements:
-         - host: 
+         - host:
              node: VM
              relationship: tosca.relationships.HostedOn
 
@@ -169,18 +157,18 @@ topology_template:
               disk_size: { get_input: host_disk }
               mem_size: { get_input: host_mem }
               libdrive_id: { get_input: libdrive_id }
- 
+
   outputs:
     ip_address:
       value: { get_attribute: [ data_avenue, ip_address ]}
     port:
       value: { get_attribute: [ data_avenue, port ]}
-  
+
   policies:
     - consumption:
         type: tosca.policies.Scaling.Performance.Consumption
         targets: [ data_avenue ]
-        properties: 
+        properties:
           priority: 100
           trigger_1_ID: estimate_completion_time
           trigger_1_Namespace: prometheus

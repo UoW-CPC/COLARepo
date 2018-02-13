@@ -10,7 +10,7 @@ capability_types:
         required: false
         constraints:
           - greater_or_equal: 0.0
- 
+
   ## capabilty types for EC2
   tosca.capabilities.MiCADO.Occopus.EC2.Cloud:
     derived_from: tosca.capabilities.Container
@@ -24,7 +24,7 @@ capability_types:
       instance_type:
         type: string
         required: true
-      key_name: 
+      key_name:
         type: string
         required: false
       security_groups_ids:
@@ -44,7 +44,7 @@ capability_types:
       vnc_password:
         type: string
         required: false
-      host_name: 
+      host_name:
         type: string
         required: false
       public_key_id:
@@ -53,7 +53,7 @@ capability_types:
       firewall_policy:
         type: string
         required: false
-      description: 
+      description:
         type: string
         required: false
         description: overrides the capability type
@@ -62,7 +62,7 @@ capability_types:
   tosca.capabilities.MiCADO.Occopus.Nova.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
-      image_id: 
+      image_id:
         type: string
         required: true
       flavour_name:
@@ -74,7 +74,7 @@ capability_types:
       project_id:
         type: string
         required: false
-      user_domain_name: 
+      user_domain_name:
         type: string
         required: false
       network_id:
@@ -86,7 +86,7 @@ capability_types:
       key_name:
         type: string
         required: false
-      security_groups: 
+      security_groups:
         type: string
         required: false
       floating_ip:
@@ -95,7 +95,7 @@ capability_types:
       floating_ip_pool:
         type: string
         required: false
- 
+
   ## capabilty types for CloudBroker
   tosca.capabilities.MiCADO.Occopus.CloudBroker.Cloud:
     derived_from: tosca.capabilities.Container
@@ -120,22 +120,62 @@ data_types:
   tosca.datatypes.MiCADO.Occopus.Cloud:
     derived_from: tosca.datatypes.Root
     properties:
-      interface_cloud: 
+      interface_cloud:
         type: string
         required: yes
-        constraints: 
+        constraints:
           - valid_values: [ 'ec2', 'nova', 'cloudsigma', 'cloudbroker' ]
       endpoint_cloud:
         type: string
         required: yes
-      credentials: 
+      credentials:
         type: tosca.datatypes.credentials
         required: false
-
-
+  deploy_type:
+    properties:
+      replicas:
+        type: integer
+        required: false
+      resources:
+        type: resource_type
+        required: false
+      labels:
+        type: map
+        required: false
+      placement:
+        type: placement_type
+        required: false
+      restart_policy:
+        type: map
+        required: false
+      update_config:
+        type: map
+        required: false
+  resource_type:
+    properties:
+      reservations:
+        type: reserve_limit_type
+        required: false
+      limits:
+        type: reserve_limit_type
+        required: false
+  reserve_limit_type:
+    properties:
+      cpus:
+        type: string
+        required: false
+      memory:
+        type: string
+        required: false
+  placement_type:
+    properties:
+      constraints:
+        type: list
+      preferences:
+        type: list
 
 node_types:
-  ## Node type that describe the Virtual Machine on which 
+  ## Node type that describe the Virtual Machine on which
   ## the container is supposed to run
   tosca.nodes.MiCADO.Compute:
     derived_from: tosca.nodes.Compute
@@ -191,34 +231,39 @@ node_types:
         type: tosca.capabilities.MiCADO.Occopus.Nova.Cloud
 
 
-  ## Node Type to describe the docker container node (it will contains the command 
-  ## line to pass to the docker) 
+  ## Node Type to describe the docker container node (it will contains the command
+  ## line to pass to the docker)
+  ## ** Properties altered to match keys under the top-level "services:" of a Docker-Compose file
   tosca.nodes.MiCADO.Container.Application.Docker:
     derived_from: tosca.nodes.Container.Application.Docker
     description: description of main container
     properties:
-      cmd:
+      command:
         type: string
         description: command line to be executed by the container.
         required: false
-      exposed_port:
-        type: integer
-        description: port exposed inside container
-        range: [ 32768, 61000 ]
+      deploy:
+        type: deploy_type
+        description: swarm-specific configuration settings
         required: false
-      env:
+      ports:
+        type: list
+        description: port exposed inside container
+        required: false
+      entrypoint:
+        type: string
+        desciption: override the default entrypoint of container
+        required: false
+      environment:
         type: map
         description: map of all the environment variable required.
         required: false
         entry_schema:
           type: string
-      constraints:
-        required: false
-        type: list
-        entry_schema:
-          type: list
-          entry_schema:
-            type: string
+      image:
+        type: string
+        description: docker image, prefixed by repository if private
+        required: true
       labels:
         required: false
         type: map
@@ -243,7 +288,7 @@ node_types:
       port:
         type: integer
     capabilities:
-      service: 
+      service:
         type: tosca.capabilities.Endpoint
 
     requirements:

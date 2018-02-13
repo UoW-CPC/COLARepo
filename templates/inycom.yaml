@@ -7,8 +7,8 @@ imports:
   - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/location/tosca_policy_Placement_Requirement_location.yaml
   - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
   - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
-## Url of the main repository fir the location of the docker Images. The user can specify her/his own 
+  - ../nodes/custom_types.yaml
+## Url of the main repository fir the location of the docker Images. The user can specify her/his own
 ## repository by adding another line with a name and url eg: my_repo: http://my_repo/
 repositories:
   docker_hub: https://hub.docker.com/
@@ -17,7 +17,7 @@ repositories:
 ## the topology template start here
 topology_template:
 
-  ## The input section starts here. This is where all the values 
+  ## The input section starts here. This is where all the values
   ## that may be set in the topology template are grouped together.
   inputs:
     docker_image:
@@ -26,10 +26,11 @@ topology_template:
       required: yes
       default: "magician"
     port_exposed:
-      type: integer
+      type: list
       description: port_exposed
       required: yes
-      default: 8080
+      default:
+        - 8080:8080
     host_cpu:
       type: integer
       description: cpu of the host
@@ -76,7 +77,7 @@ topology_template:
       description: max time of scale scale up
       required: yes
       default: 5 m
-    scale_down_max_time: 
+    scale_down_max_time:
       type: scalar-unit.time
       description: max time of scale scale down
       required: yes
@@ -88,29 +89,30 @@ topology_template:
       default: Europe
 
 
-  ## The is the node template section. Where the node that compose 
+  ## The is the node template section. Where the node that compose
   ## the topology and their relationships are specified
   node_templates:
-   
+
     ## This specifies the Docker Image node type and its parameters
     Inycom:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
         privileged: true
-        exposed_port:  {get_input: "port_exposed"} 
-  
-      ## This is the artefact of the Docker Image node type which represents 
+        ports:  {get_input: "port_exposed"}
+        image:  {get_input: "docker_image"}
+
+      ## This is the artefact of the Docker Image node type which represents
       ## the Docker Image in either the common or personal docker hub (specified repository)
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file:  {get_input: "docker_image"} 
+          file:  {get_input: "docker_image"}
           repository: docker_hub
 
-      ## This specifies the requirements to select the Virtual Machine on which the 
+      ## This specifies the requirements to select the Virtual Machine on which the
       ## Docker Image will be executed.
       requirements:
-        - host: 
+        - host:
             node: VM
             relationship: tosca.relationships.HostedOn
 
@@ -125,7 +127,7 @@ topology_template:
           interface_cloud: cloudsigma
           endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
 
-      ## This specifies the capabilities of the Virtual Machine Image node type which 
+      ## This specifies the capabilities of the Virtual Machine Image node type which
       ## are matched against the requirements of the Docker Image type
       capabilities:
         host:
@@ -175,4 +177,3 @@ topology_template:
           priority: 100
           trigger_1_Namespace: prometheus
           accepted_domaine: { get_input: location }
-
