@@ -234,9 +234,36 @@ node_types:
   ## Node Type to describe the docker container node (it will contains the command
   ## line to pass to the docker)
   ## ** Properties altered to match keys under the top-level "services:" of a Docker-Compose file
+
+  tosca.nodes.MiCADO.network.Docker:
+    derived_from: tosca.nodes.network.Network
+    description: description of a Docker network
+    properties:
+      attachable:
+        type: boolean
+        description: is attachable
+        required: false
+      driver:
+        type: string
+        description: network driver
+        required: false
+
+  tosca.nodes.MiCADO.ObjectStorage.Docker:
+    derived_from: tosca.nodes.ObjectStorage
+    description: description of a Docker volume
+    properties:
+      name:
+        type: string
+        description: name of the volume
+        required: false
+      labels:
+        type: map
+        description: map of metadata labels
+        required: false
+
   tosca.nodes.MiCADO.Container.Application.Docker:
     derived_from: tosca.nodes.Container.Application.Docker
-    description: description of main container
+    description: description of a Docker service
     properties:
       command:
         type: string
