@@ -247,6 +247,14 @@ node_types:
         type: string
         description: network driver
         required: false
+      ip_version:
+        type: integer
+        required: false
+        default: null
+      dhcp_enabled:
+        type: boolean
+        required: false
+        default: null
 
   tosca.nodes.MiCADO.ObjectStorage.Docker:
     derived_from: tosca.nodes.ObjectStorage
