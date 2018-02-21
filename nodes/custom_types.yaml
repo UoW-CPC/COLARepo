@@ -338,6 +338,9 @@ node_types:
       networks:
         required: false
         type: list
+      volumes:
+        required: false
+        type: list
       ports:
         type: list
         description: port exposed inside container
