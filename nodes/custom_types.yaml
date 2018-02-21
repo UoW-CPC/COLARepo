@@ -194,8 +194,10 @@ data_types:
   placement_type:
     properties:
       constraints:
+        required: false
         type: list
       preferences:
+        required: false
         type: list
 
 node_types:
