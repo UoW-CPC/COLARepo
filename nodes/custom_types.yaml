@@ -178,18 +178,10 @@ data_types:
   resource_type:
     properties:
       reservations:
-        type: reserve_limit_type
+        type: map
         required: false
       limits:
-        type: reserve_limit_type
-        required: false
-  reserve_limit_type:
-    properties:
-      cpus:
-        type: string
-        required: false
-      memory:
-        type: string
+        type: map
         required: false
   placement_type:
     properties:
