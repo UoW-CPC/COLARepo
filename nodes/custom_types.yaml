@@ -358,6 +358,10 @@ node_types:
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.ConnectsTo
       - host:
-          capability: tosca.capability.Container
+          capability: tosca.capabilities.Container
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.HostedOn
+      - storage:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.MiCADO.Compute
+          relationship: tosca.relationships.AttachesTo
