@@ -75,9 +75,6 @@ topology_template:
       description: environment variable to set the password
       required: yes
       default: DEFAULT_HERE
-
-
-
     max_cpu_consumption:
       type: float
       description: max cpu consumption
@@ -106,7 +103,11 @@ topology_template:
     proxy:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
-           image: { get_input: docker_image_proxy }
+       artifacts:
+         image:
+           type: tosca.artifacts.Deployment.Image.Container.Docker
+           file: { get_input: docker_image_proxy }
+           repository: docker_hub
        requirements:
          - service:
              node: data_avenue
@@ -119,7 +120,11 @@ topology_template:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
          ports: { get_input: port_exposed_da }
-         image: { get_input: docker_image_data_avenue }
+       artifacts:
+         image:
+           type: tosca.artifacts.Deployment.Image.Container.Docker
+           file: { get_input: docker_image_data_avenue }
+           repository: docker_hub
        requirements:
          - service:
              node: mysql
@@ -137,7 +142,11 @@ topology_template:
            MYSQL_USER: { get_input: mysql_user }
            MYSQL_PASSWORD: { get_input: mysql_password }
          ports: { get_input: port_exposed_mysql }
-         image: { get_input: docker_image_mysql }
+       artifacts:
+         image:
+           type: tosca.artifacts.Deployment.Image.Container.Docker
+           file: { get_input: docker_image_mysql }
+           repository: docker_hub
        requirements:
          - host:
              node: VM
