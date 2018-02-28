@@ -320,7 +320,7 @@ node_types:
       image:
         type: string
         description: docker image, prefixed by repository if private
-        required: true
+        required: false
       labels:
         required: false
         type: map
@@ -338,6 +338,10 @@ node_types:
       ports:
         type: list
         description: port exposed inside container
+        required: false
+      privileged:
+        type: boolean
+        description: deprecated
         required: false
       secrets:
         type: list
