@@ -277,6 +277,11 @@ node_types:
   tosca.nodes.MiCADO.Volume.Docker:
     derived_from: tosca.nodes.BlockStorage
     description: description of a Docker volume
+    requirements:
+      - storage:
+            capability: tosca.capabilities.Attachment
+            node: tosca.nodes.MiCADO.Container.Application.Docker
+            relationship: tosca.relationships.AttachesTo
     properties:
       name:
         type: string
@@ -372,6 +377,6 @@ node_types:
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.HostedOn
       - storage:
-          capability: tosca.capabilities.Container
+          capability: tosca.capabilities.Attachment
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.AttachesTo
