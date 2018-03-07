@@ -345,7 +345,7 @@ node_types:
         required: false
       privileged:
         type: boolean
-        description: *deprecated*
+        description: deprecated
         required: false
       secrets:
         type: list
