@@ -274,8 +274,8 @@ node_types:
         required: false
         default: null
 
-  tosca.nodes.MiCADO.ObjectStorage.Docker:
-    derived_from: tosca.nodes.ObjectStorage
+  tosca.nodes.MiCADO.Volume.Docker:
+    derived_from: tosca.nodes.BlockStorage
     description: description of a Docker volume
     properties:
       name:
@@ -285,6 +285,10 @@ node_types:
       labels:
         type: map
         description: map of metadata labels
+        required: false
+      size:
+        type: scalar.unit-size
+        description: overwrite size requirement
         required: false
 
   tosca.nodes.MiCADO.Container.Application.Docker:
@@ -341,7 +345,7 @@ node_types:
         required: false
       privileged:
         type: boolean
-        description: deprecated
+        description: *deprecated*
         required: false
       secrets:
         type: list
@@ -355,6 +359,8 @@ node_types:
     capabilities:
       service:
         type: tosca.capabilities.Endpoint
+      storage:
+        type: tosca.capabilities.Attachment
 
     requirements:
       - service:
