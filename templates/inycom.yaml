@@ -166,7 +166,7 @@ topology_template:
         targets: [ Inycom ]
         properties:
           stage: Deployment
-          properties: 100
+          priority: 100
           url: { get_input: url_list }
 
     - deployment_location:
@@ -176,4 +176,4 @@ topology_template:
           stage: Deployment
           priority: 100
           trigger_1_Namespace: prometheus
-          accepted_domaine: { get_input: location }
+          accepted_domain: { get_input: location }
