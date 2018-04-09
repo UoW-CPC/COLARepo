@@ -1,0 +1,117 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
+
+repositories:
+  docker_hub: https://hub.docker.com/
+
+topology_template:
+  inputs:
+    stress_img:
+      type: string
+      description: Docker image for stress
+      default: lorel/docker-stress-ng
+    mount_point:
+      type: string
+      description: Mount point for attached volume
+      default: /tmp
+    exposed_ports:
+      type: list
+      description: Ports to expose
+      default: ["6379:6379"]
+  node_templates:
+    jobber:
+       type: tosca.nodes.MiCADO.Container.Application.Docker
+       properties:
+         # You may treat this section as you would a key under "services" in D-Compose
+         entrypoint: sh -c "stress-ng --cpu 0 --cpu-method pi -l 10 -t 30 && (echo done >> /tmp/runs)"
+       artifacts:
+         image:
+           type: tosca.artifacts.Deployment.Image.Container.Docker
+           file: { get_input: stress_img }
+           repository: docker_hub
+       requirements:
+        - volume:
+            node: busydata
+            relationship:
+              type: tosca.relationships.ConnectsTo
+              properties:
+                target: /tmp
+        - host:
+            node: MICADO-worker
+            relationship: tosca.relationships.HostedOn
+
+    stress:
+       type: tosca.nodes.MiCADO.Container.Application.Docker
+       properties:
+         entrypoint: sh -c "stress-ng --cpu 0 --cpu-method pi -l 75"
+         deploy:
+           resources:
+             reservations:
+               cpus: '1.0'
+       artifacts:
+         image:
+           type: tosca.artifacts.Deployment.Image.Container.Docker
+           file: lorel/docker-stress-ng
+           repository: docker_hub
+
+    db:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        ports: { get_input: exposed_ports }
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: redis
+          repository: docker_hub
+
+    updater:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        command: sh -c "while true; do echo set runs $$(wc -l /tmp/runs | cut -d' ' -f1) | nc test_db 6379; sleep 30; done"
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: busybox
+          repository: docker_hub
+      requirements:
+       - service:
+          node: db
+          relationship:
+           type: tosca.relationships.ConnectsTo
+           properties:
+             target: stressnet
+       - volume:
+           node: busydata
+           relationship:
+             type: tosca.relationships.AttachesTo
+             properties:
+               target: /tmp
+       - host:
+           node: db
+           relationship: tosca.relationships.HostedOn
+
+    MICADO-worker:
+       type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
+       properties:
+          cloud:
+            interface_cloud: cloudsigma
+            endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
+
+       capabilities:
+          host:
+            properties:
+              num_cpus: 2
+              disk_size: 10 GB
+              mem_size: 2 GB
+              libdrive_id: "some_unused_id_goes_here"
+
+    stressynet:
+      type: tosca.nodes.MiCADO.network.Network.Docker
+      properties:
+        # Treat this section as you would a key under "networks" in D-Compose
+        driver: "overlay"
+
+    busydata:
+      type: tosca.nodes.MiCADO.ObjectStorage.Docker

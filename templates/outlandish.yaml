@@ -1,11 +1,11 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
-  - ../nodes/custom_types.yaml
-  - ../policies/execution/tosca_policy_execution_schedule.yaml
-  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
-  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/execution/tosca_policy_execution_schedule.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
