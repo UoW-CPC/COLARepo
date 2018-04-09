@@ -114,4 +114,4 @@ topology_template:
         driver: "overlay"
 
     busydata:
-      type: tosca.nodes.MiCADO.ObjectStorage.Docker
+      type: tosca.nodes.MiCADO.Volume.Docker
