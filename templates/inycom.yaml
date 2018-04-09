@@ -4,15 +4,14 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 ## imports section defines the tosca files that are needed to parsed
 imports:
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/location/tosca_policy_Placement_Requirement_location.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - ../policies/placement/requirement/location/tosca_policy_Placement_Requirement_location.yaml
+  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
   - ../nodes/custom_types.yaml
 ## Url of the main repository fir the location of the docker Images. The user can specify her/his own
 ## repository by adding another line with a name and url eg: my_repo: http://my_repo/
 repositories:
   docker_hub: https://hub.docker.com/
-
 
 ## the topology template start here
 topology_template:
@@ -97,9 +96,7 @@ topology_template:
     Inycom:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        privileged: true
         ports:  {get_input: "port_exposed"}
-        image:  {get_input: "docker_image"}
 
       ## This is the artefact of the Docker Image node type which represents
       ## the Docker Image in either the common or personal docker hub (specified repository)

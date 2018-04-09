@@ -1,8 +1,0 @@
-networks: {}
-services:
-  Repast:
-    command: URL_MODEL [ BATCH_PARAMS ]
-    image: repast
-    privileged: false
-version: '3'
-volumes: {}

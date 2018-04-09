@@ -249,7 +249,7 @@ node_types:
         type: tosca.capabilities.MiCADO.Occopus.Nova.Cloud
 
 
-  ## Node Type to describe the docker container node (it will contains the command
+  ## Node Type to describe  docker nodes (it will contains the command
   ## line to pass to the docker)
   ## ** Properties altered to match keys under the top-level "services:" of a Docker-Compose file
 
@@ -277,11 +277,6 @@ node_types:
   tosca.nodes.MiCADO.Volume.Docker:
     derived_from: tosca.nodes.BlockStorage
     description: description of a Docker volume
-    requirements:
-      - storage:
-            capability: tosca.capabilities.Attachment
-            node: tosca.nodes.MiCADO.Container.Application.Docker
-            relationship: tosca.relationships.AttachesTo
     properties:
       name:
         type: string
@@ -295,6 +290,9 @@ node_types:
         type: scalar.unit-size
         description: overwrite size requirement
         required: false
+    capabilities:
+      volume:
+        type: tosca.capabilities.Attachment
 
   tosca.nodes.MiCADO.Container.Application.Docker:
     derived_from: tosca.nodes.Container.Application.Docker
@@ -348,10 +346,6 @@ node_types:
         type: list
         description: port exposed inside container
         required: false
-      privileged:
-        type: boolean
-        description: deprecated
-        required: false
       secrets:
         type: list
         required: false
@@ -364,19 +358,17 @@ node_types:
     capabilities:
       service:
         type: tosca.capabilities.Endpoint
-      storage:
-        type: tosca.capabilities.Attachment
 
     requirements:
       - service:
           capability: tosca.capabilities.Endpoint
-          node: tosca.nodes.MiCADO.Compute
+          node: tosca.nodes.MiCADO.Container.Application.Docker
           relationship: tosca.relationships.ConnectsTo
       - host:
           capability: tosca.capabilities.Container
           node: tosca.nodes.MiCADO.Compute
           relationship: tosca.relationships.HostedOn
-      - storage:
+      - volume:
           capability: tosca.capabilities.Attachment
-          node: tosca.nodes.MiCADO.Compute
+          node: tosca.nodes.MiCADO.Volume.Docker
           relationship: tosca.relationships.AttachesTo

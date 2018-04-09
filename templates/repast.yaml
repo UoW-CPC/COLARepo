@@ -2,9 +2,9 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
   - ../nodes/custom_types.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion_job.yaml
+  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion_job.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -73,7 +73,13 @@ topology_template:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
         command: "URL_MODEL [ BATCH_PARAMS ]"
-        image: { get_input: docker_image }
+
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file:  {get_input: "docker_image"}
+          repository: docker_hub
+          
       requirements:
         - host:
             node: VM

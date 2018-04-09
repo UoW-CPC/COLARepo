@@ -3,9 +3,9 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 imports:
   - ../nodes/custom_types.yaml
   - ../policies/execution/tosca_policy_execution_schedule.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -118,12 +118,16 @@ topology_template:
     AFA:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        image: { get_input: docker_image_afa }
         ports: { get_input: port_exposed }
         environment:
           ENVIR_A : { get_input: input_a }
           ENVIR_B : { get_input: input_b }
           ENVIR_N : { get_input: input_n }
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file:  { get_input: docker_image_afa }
+          repository: docker_hub
 
       requirements:
         - host:
@@ -133,12 +137,16 @@ topology_template:
     Caching_service:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        image: { get_input: docker_image_cache_service }
         ports: { get_input: port_exposed }
         environment:
           ENVIR_A : { get_input : input_a }
           ENVIR_B : { get_input : input_b }
           ENVIR_N : { get_input : input_n }
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file:  { get_input: docker_image_cache_service }
+          repository: docker_hub
 
       requirements:
         - host:
