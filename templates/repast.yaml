@@ -1,10 +1,10 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
-  - ./nodes/custom_types.yaml
-  - ./policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - ./policies/scalability/performance/completion/tosca_policy_scalability_performance_completion_job.yaml
-  - ./policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion_job.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -22,7 +22,7 @@ topology_template:
       type: string
       description: list of url for afa component to connect to
       default: "http://url_simulation_db:port/"
-    
+
     ## Input to define the VM
     host_mem:
       type: scalar-unit.size
@@ -61,7 +61,7 @@ topology_template:
       description: total budget for the experiment
       required: true
       default: 50.0
-    cut_off: 
+    cut_off:
       type: float
       description: allowance to go behind total budget
       required: true
@@ -72,14 +72,16 @@ topology_template:
     Repast:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        cmd: "URL_MODEL [ BATCH_PARAMS ]"
+        command: "URL_MODEL [ BATCH_PARAMS ]"
+
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file: { get_input: docker_image }
+          file:  {get_input: "docker_image"}
           repository: docker_hub
+
       requirements:
-        - host: 
+        - host:
             node: VM
             relationship: tosca.relationships.HostedOn
 
@@ -102,21 +104,19 @@ topology_template:
 
   policies:
     - scalability:
-        type: tosca.policies.Scaling.Performance.Completion.Job
+        type: tosca.policies.Scaling.Performance.Completion
         targets: [ Repast ]
         properties:
           stage: started
           priority: 100
           trigger_1_ID: estimate_completion_time
-          trigger_1_Namespace: prometheus  
+          trigger_1_Namespace: prometheus
           max_estimation_time: { get_input: max_estimation_time }
           estimated_completion_time_one_job: { get_input: estimated_completion_time_one_job }
           total_budget: { get_input: total_budget }
           cut_off_percentage: { get_input: cut_off }
-          params: 
+          params:
             url: { get_input: url_simulation_db }
-
-
     - connect:
         type: tosca.policies.Placement.Requirement.Connection
         targets: [ Repast ]
@@ -124,5 +124,3 @@ topology_template:
           stage: created
           properties: 100
           url: { get_input: url_simultation_db }
-
-

@@ -1,11 +1,11 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
-  - ../nodes/custom_types.yaml
-  - ../policies/execution/tosca_policy_execution_schedule.yaml
-  - ../policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
-  - ../policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
-  - ../policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/execution/tosca_policy_execution_schedule.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/placement/requirement/connection/tosca_policy_deployment_placement_requirement_connection.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/performance/completion/tosca_policy_scalability_performance_completion.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -16,25 +16,25 @@ topology_template:
       type: string
       description: Docker image to run
       required: yes
-      default: "image_to_use"
+      default: "image_to_use_afa"
 
     docker_image_cache_service:
       type: string
       description: Docker image to run
       required: yes
-      default: "image_to_use"
+      default: "image_to_use_cache"
 
-    ENVIR_A:
+    input_a:
       type: string
       description: ENVIR_A string
       default: "some environment_variables"
 
-    ENVIR_B:
+    input_b:
       type: string
       description: ENVIR_B string
       default: "some environment_variables"
 
-    ENVIR_C:
+    input_n:
       type: string
       description: ENVIR_C string
       default: "some environment_variables"
@@ -53,10 +53,10 @@ topology_template:
         type: string
 
     port_exposed:
-      type: integer
+      type: list
       description: port_exposed
       required: yes
-      default: 8080
+      default: ["7777:6666"]
     host_mem:
       type: scalar-unit.size
       description: host mem capacity
@@ -93,7 +93,7 @@ topology_template:
       description: max cpu consumption
       required: yes
       default: 0.8
-    
+
     min_cpu_consumption:
       type: float
       description: min cpu consumption
@@ -118,41 +118,40 @@ topology_template:
     AFA:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        exposed_port: { get_input: port_exposed }
-        env:
+        ports: { get_input: port_exposed }
+        environment:
           ENVIR_A : { get_input: input_a }
           ENVIR_B : { get_input: input_b }
           ENVIR_N : { get_input: input_n }
-
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file: { get_input: docker_image_afa  }
+          file:  { get_input: docker_image_afa }
           repository: docker_hub
+
       requirements:
-        - host: 
+        - host:
             node: VM
             relationship: tosca.relationships.HostedOn
 
     Caching_service:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        exposed_port: { get_input: port_exposed }
-        env:
-          ENVIR_A : { get_input: input_a }
-          ENVIR_B : { get_input: input_b }
-          ENVIR_N : { get_input: input_n }
-
+        ports: { get_input: port_exposed }
+        environment:
+          ENVIR_A : { get_input : input_a }
+          ENVIR_B : { get_input : input_b }
+          ENVIR_N : { get_input : input_n }
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file: { get_input: docker_image_cache_service }
+          file:  { get_input: docker_image_cache_service }
           repository: docker_hub
+
       requirements:
-        - host: 
+        - host:
             node: VM
             relationship: tosca.relationships.HostedOn
-
 
     VM:
       type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
@@ -180,7 +179,7 @@ topology_template:
     - consumption:
         type: tosca.policies.Scaling.Performance.Consumption
         targets: [ AFA ]
-        properties: 
+        properties:
           stage: started
           priority: 100
           trigger_1_ID: estimate_completion_time
@@ -225,4 +224,3 @@ topology_template:
           stage: created
           properties: 100
           url: { get_input: url_list_caching }
-
