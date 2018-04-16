@@ -1,5 +1,15 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
+relationship_types:
+  ## relationship types for Docker
+  tosca.relationships.MiCADO.ConnectsTo:
+    derived_from: tosca.relationships.ConnectsTo
+    properties:
+      network:
+        type: string
+        description: Name of Docker network to connect containers over
+        required: true
+
 capability_types:
   ## capabilty types for Docker
   tosca.capabilities.MiCADO.Container.Docker:
