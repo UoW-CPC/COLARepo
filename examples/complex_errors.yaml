@@ -35,9 +35,9 @@ topology_template:
         - volume:
             node: busydata
             relationship:
-              type: tosca.relationships.ConnectsTo
+              type: tosca.relationships.AttachesTo
               properties:
-                location: /tmp
+                locat8ion: /tmp
         - host:
             node: MICADO-worker
             relationship: tosca.relationships.HostedOn
@@ -78,13 +78,13 @@ topology_template:
       requirements:
        - service:
           node: db
-          relationship: tosca.relationships.ConnectsTo
+          relationship: tosca.relationships.MiCADO.ConnectsTo
        - volume:
            node: busydata
            relationship:
              type: tosca.relationships.AttachesTo
              properties:
-               target: /tmp
+               location: /tmp
        - host:
            node: db
            relationship: tosca.SomeOtherOrchestrator.relationships.HostedOn
