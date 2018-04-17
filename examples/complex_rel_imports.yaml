@@ -35,9 +35,9 @@ topology_template:
         - volume:
             node: busydata
             relationship:
-              type: tosca.relationships.ConnectsTo
+              type: tosca.relationships.AttachesTo
               properties:
-                target: /tmp
+                location: /tmp
         - host:
             node: MICADO-worker
             relationship: tosca.relationships.HostedOn
@@ -79,17 +79,17 @@ topology_template:
        - service:
           node: db
           relationship:
-           type: tosca.relationships.ConnectsTo
+           type: tosca.relationships.MiCADO.ConnectsTo
            properties:
-             target: stressnet
+             network: stressnet
        - volume:
            node: busydata
            relationship:
              type: tosca.relationships.AttachesTo
              properties:
-               target: /tmp
+               location: /tmp
        - host:
-           node: db
+           node: MICADO-worker
            relationship: tosca.relationships.HostedOn
 
     MICADO-worker:
