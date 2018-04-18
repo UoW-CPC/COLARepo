@@ -110,9 +110,9 @@ topology_template:
          - service:
              node: data_avenue
              relationship:
-               type: tosca.relationships.ConnectsTo
+               type: tosca.relationships.MiCADO.ConnectsTo
                properties:
-                 target: default_net
+                 network: default_net
          - host:
              node: VM
              relationship: tosca.relationships.HostedOn
@@ -130,9 +130,9 @@ topology_template:
          - service:
              node: mysql
              relationship:
-               type: tosca.relationships.ConnectsTo
+               type: tosca.relationships.MiCADO.ConnectsTo
                properties:
-                 target: default_net
+                 network: default_net
          - host:
              node: VM
              relationship: tosca.relationships.HostedOn
