@@ -19,11 +19,14 @@ topology_template:
   ## The input section starts here. This is where all the values
   ## that may be set in the topology template are grouped together.
   inputs:
-    docker_image:
+    magician_image:
       type: string
-      description: Docker image to run
+      description: Docker image to run for the magician app
       required: yes
-      default: "magician"
+    classifier_image:
+      type: string
+      description: Docker image to run for the classifier app
+      required: yes
     port_exposed:
       type: list
       description: port_exposed
@@ -91,19 +94,23 @@ topology_template:
   ## The is the node template section. Where the node that compose
   ## the topology and their relationships are specified
   node_templates:
-
     ## This specifies the Docker Image node type and its parameters
-    Inycom:
+    magician:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        ports:  {get_input: "port_exposed"}
+        deploy:
+          resources:
+            reservations:
+              cpus: '1.0'
+        ports:
+          - "8080:8080"
 
       ## This is the artefact of the Docker Image node type which represents
       ## the Docker Image in either the common or personal docker hub (specified repository)
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file:  {get_input: "docker_image"}
+          file: { get_input: magician_image }
           repository: docker_hub
 
       ## This specifies the requirements to select the Virtual Machine on which the
@@ -113,6 +120,17 @@ topology_template:
             node: VM
             relationship: tosca.relationships.HostedOn
 
+    classifier:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file: { get_input: classifier_image }
+          repository: docker_hub
+      requirements:
+        - host:
+            node: VM
+            relationship: tosca.relationships.HostedOn
 
     ## This specifies the Virtual Machine Image node type and its parameters
     VM:
@@ -138,16 +156,16 @@ topology_template:
   ## This specifies the output that are defined by the attribute of the Output
   outputs:
     ip_address:
-      value: { get_attribute: [ Inycom, ip_address ]}
+      value: { get_attribute: [ magician, ip_address ]}
     port:
-      value: { get_attribute: [ Inycom, port ]}
+      value: { get_attribute: [ magician, port ]}
 
 
   ## This specifies the policies that are applied to the different nodes of this topology template
   policies:
     - scalability:
         type: tosca.policies.Scaling.Performance.Consumption
-        targets: [ Inycom ]
+        targets: [ magician ]
         properties:
           stage: Execution
           priority: 100
@@ -160,7 +178,7 @@ topology_template:
 
     - deployment_connection:
         type: tosca.policies.Placement.Requirement.Connection
-        targets: [ Inycom ]
+        targets: [ magician ]
         properties:
           stage: Deployment
           priority: 100
