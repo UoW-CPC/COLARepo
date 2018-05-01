@@ -9,34 +9,46 @@ imports:
 
 repositories:
   docker_hub: https://hub.docker.com/
+  outlandish_registry: outlandish_registry_url.com/
 
 topology_template:
   inputs:
-    docker_image_afa:
+    docker_image_app:
       type: string
       description: Docker image to run
       required: yes
-      default: "image_to_use_afa"
-
-    docker_image_cache_service:
+      default: "image_to_use_app"
+    docker_image_web:
       type: string
       description: Docker image to run
       required: yes
-      default: "image_to_use_cache"
-
-    input_a:
+      default: "image_to_use_web"
+    db_host:
       type: string
-      description: ENVIR_A string
       default: "some environment_variables"
-
-    input_b:
+    db_name:
       type: string
-      description: ENVIR_B string
       default: "some environment_variables"
-
-    input_n:
+    memcache_servers:
       type: string
-      description: ENVIR_C string
+      default: "some environment_variables"
+    db_boxoffice:
+      type: string
+      default: "some environment_variables"
+    db_boxoffice_live:
+      type: string
+      default: "some environment_variables"
+    db_user:
+      type: string
+      default: "some environment_variables"
+    db_password:
+      type: string
+      default: "some environment_variables"
+    wp_home:
+      type: string
+      default: "some environment_variables"
+    wp_siteurl:
+      type: string
       default: "some environment_variables"
 
     url_list_caching:
@@ -52,11 +64,6 @@ topology_template:
       entry_schema:
         type: string
 
-    port_exposed:
-      type: list
-      description: port_exposed
-      required: yes
-      default: ["7777:6666"]
     host_mem:
       type: scalar-unit.size
       description: host mem capacity
@@ -87,46 +94,73 @@ topology_template:
       description: command to run the cron job
       required: yes
       default: "some command"
-
     max_cpu_consumption:
       type: float
       description: max cpu consumption
       required: yes
       default: 0.8
-
     min_cpu_consumption:
       type: float
       description: min cpu consumption
       required: yes
       default: 0.2
-
     scale_up_max_time:
       type: scalar-unit.time
       description: max time to scale up
       required: yes
       default: 5 m
-
     scale_down_max_time:
       type: scalar-unit.time
       description: max time scale down
       required: yes
       default: 5 m
 
-
-
   node_templates:
-    AFA:
+    app:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        ports: { get_input: port_exposed }
+        expose:
+          - 9000
+        deploy:
+          restart_policy:
+            condition: any
         environment:
-          ENVIR_A : { get_input: input_a }
-          ENVIR_B : { get_input: input_b }
-          ENVIR_N : { get_input: input_n }
+          DB_HOST : { get_input: db_host }
+          DB_NAME : { get_input: db_name }
+          MEMCACHE_SERVERS : { get_input: memcache_servers }
+          DB_BOXOFFICE : { get_input: db_boxoffice }
+          DB_BOXOFFICE_LIVE : { get_input: db_boxoffice_live }
+          DB_USER : { get_input: db_user }
+          DB_PASSWORD : { get_input: db_password }
+          WP_HOME : { get_input: wp_home }
+          WP_SITEURL : { get_input: wp_siteurl }
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file:  { get_input: docker_image_afa }
+          file:  { get_input: docker_image_app }
+          repository: outlandish_registry
+
+      requirements:
+        - host:
+            node: VM
+            relationship: tosca.relationships.HostedOn
+        - service:
+            node: memcached
+            relationship:
+              type: tosca.relationships.MiCADO.ConnectsTo
+              properties:
+                network: application
+
+    memcached:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        deploy:
+          restart_policy:
+            condition: any
+      artifacts:
+        image:
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+          file:  memcached:alpine
           repository: docker_hub
 
       requirements:
@@ -134,19 +168,19 @@ topology_template:
             node: VM
             relationship: tosca.relationships.HostedOn
 
-    Caching_service:
+    web:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        ports: { get_input: port_exposed }
-        environment:
-          ENVIR_A : { get_input : input_a }
-          ENVIR_B : { get_input : input_b }
-          ENVIR_N : { get_input : input_n }
+        ports:
+          - "8080:80"
+        deploy:
+          restart_policy:
+            condition: any
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
-          file:  { get_input: docker_image_cache_service }
-          repository: docker_hub
+          file:  { get_input: docker_image_web }
+          repository: outlandish_registry
 
       requirements:
         - host:
@@ -171,19 +205,19 @@ topology_template:
 
   outputs:
     ip_address:
-      value: { get_attribute: [ AFA, ip_address ]}
+      value: { get_attribute: [ app, ip_address ]}
     port:
-      value: { get_attribute: [ AFA, port ]}
+      value: { get_attribute: [ app, port ]}
 
   policies:
     - consumption:
         type: tosca.policies.Scaling.Performance.Consumption
-        targets: [ AFA ]
+        targets: [ app ]
         properties:
           stage: started
           priority: 100
-          trigger_1_ID: estimate_completion_time
-          trigger_1_Namespace: prometheus
+          trigger_1_id: estimate_completion_time
+          trigger_1_namespace: prometheus
           max_cpu_consumption: { get_input: max_cpu_consumption }
           scale_up_max_time: { get_input: scale_up_max_time }
           min_cpu_consumption: { get_input: min_cpu_consumption }
@@ -191,7 +225,7 @@ topology_template:
 
     - execution:
         type: tosca.policies.Execution.Schedule
-        targets: [ Caching_service ]
+        targets: [ memcached ]
         properties:
           stage: started
           priority: 100
@@ -199,18 +233,18 @@ topology_template:
 
     - scalability:
         type: tosca.policies.Scaling.Performance.Completion
-        targets: [ Caching_service ]
+        targets: [ memcached ]
         properties:
           stage: started
           priority: 100
-          trigger_1_ID: estimate_completion_time
-          trigger_1_Namespace: cache_server
+          trigger_1_id: estimate_completion_time
+          trigger_1_namespace: cache_server
           max_estimation_time: { get_input: max_completion_time }
 
 
     - deployment_connection_AFA:
         type: tosca.policies.Placement.Requirement.Connection
-        targets: [ Caching_service ]
+        targets: [ memcached ]
         properties:
           stage: created
           properties: 100
@@ -219,7 +253,7 @@ topology_template:
 
     - deployment_connection_Caching:
         type: tosca.policies.Placement.Requirement.Connection
-        targets: [ Caching_service ]
+        targets: [ memcached ]
         properties:
           stage: created
           properties: 100

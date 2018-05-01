@@ -14,11 +14,11 @@ policy_types:
         type: integer
         description: the priority with which the policy will be exectued
         default: 100
-      trigger_1_ID:
+      trigger_1_id:
         type: string
         description: defines the trigger (thesholdt that will spin up/down the instances)
         default: estimate_completion_time
-      trigger_1_Namespace:
+      trigger_1_namespace:
         type: string
         description: defines the namespace of the service that is monitoring th number of queries that must be executed
       max_cpu_consumption:
@@ -33,4 +33,3 @@ policy_types:
       scale_down_max_time:
         type: scalar-unit.time
         description: defines the maximum time whe nthe min cpu threshold must be exceeded for the instance to be undeployed.
-

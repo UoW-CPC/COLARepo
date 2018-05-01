@@ -16,12 +16,12 @@ policy_types:
         description: the priority with which the policy will be exectued
         default: 100
         required: false
-      trigger_1_ID:
+      trigger_1_id:
         type: string
         description: defines the trigger (theshold that will spin up/down the instances)
         default: estimate_completion_time
         required: false
-      trigger_1_Namespace:
+      trigger_1_namespace:
         type: string
         description: defines the namespace of the service that is monitoring the connections
         required: false
@@ -33,4 +33,3 @@ policy_types:
         type: scalar-unit.time
         required: false
         description: defines the earliest time of completion under which the new instance will be undeployed
-

@@ -109,8 +109,8 @@ topology_template:
         properties:
           stage: started
           priority: 100
-          trigger_1_ID: estimate_completion_time
-          trigger_1_Namespace: prometheus
+          trigger_1_id: estimate_completion_time
+          trigger_1_namespace: prometheus
           max_estimation_time: { get_input: max_estimation_time }
           estimated_completion_time_one_job: { get_input: estimated_completion_time_one_job }
           total_budget: { get_input: total_budget }

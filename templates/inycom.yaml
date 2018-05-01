@@ -190,5 +190,5 @@ topology_template:
         properties:
           stage: Deployment
           priority: 100
-          trigger_1_Namespace: prometheus
+          trigger_1_namespace: prometheus
           accepted_domain: { get_input: location }
