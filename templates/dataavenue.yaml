@@ -183,8 +183,8 @@ topology_template:
         targets: [ data_avenue ]
         properties:
           priority: 100
-          trigger_1_ID: estimate_completion_time
-          trigger_1_Namespace: prometheus
+          trigger_1_id: estimate_completion_time
+          trigger_1_namespace: prometheus
           max_cpu_consumption: { get_input: max_cpu_consumption }
           scale_up_max_time: { get_input: scale_up_max_time }
           min_cpu_consumption: { get_input: min_cpu_consumption }

@@ -9,14 +9,14 @@ policy_types:
         type: string
         description: the stage that will be affected by the policy
         default: Created
-      priority: 
+      priority:
         type: integer
-        description: the priority with which the policy will be executed 
+        description: the priority with which the policy will be executed
         default: 100
-      Trigger_1_Namespace: 
+      trigger_1_namespace:
         type: string
-        description: the service that will return the geographical location of the service 
-      accepted_domaine:
+        description: the service that will return the geographical location of the service
+      accepted_domain:
         type: list
         description: list of the acceptable geographical locations
         schema_entry:
