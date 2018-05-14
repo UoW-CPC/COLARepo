@@ -2,6 +2,7 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
   - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
+  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -121,3 +122,13 @@ topology_template:
       value: { get_attribute: [ db, ip_address ]}
     port:
       value: { get_attribute: [ db, port ]}
+
+  policies:
+    - scalability:
+        type: tosca.policies.Scaling.Performance.Consumption.Simple
+        targets: [ stress ]
+        properties:
+          stage: Execution
+          priority: 100
+          max_cpu_consumption: 80
+          min_cpu_consumption: 20

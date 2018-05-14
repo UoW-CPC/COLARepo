@@ -33,3 +33,22 @@ policy_types:
       scale_down_max_time:
         type: scalar-unit.time
         description: defines the maximum time whe nthe min cpu threshold must be exceeded for the instance to be undeployed.
+
+  tosca.policies.Scaling.Performance.Consumption.Simple:
+    derived_from: tosca.policies.Scaling
+    description: Sets min/max thresholds for CPU load in a simple scaling policy
+    properties:
+      stage:
+        type: string
+        description: the stage that will be affected by the policy
+        default: started
+      priority:
+        type: integer
+        description: the priority with which the policy will be exectued
+        default: 100
+      max_cpu_consumption:
+        type: integer
+        description: defines the maximum time when the max cpu threshold must be exceeded for the new instance to be deployed
+      min_cpu_consumption:
+        type: integer
+        description: defines the minimum cpu consumption below which an instance will come down

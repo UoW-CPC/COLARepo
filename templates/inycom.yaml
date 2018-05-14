@@ -176,6 +176,15 @@ topology_template:
           min_cpu_consumption: { get_input: min_cpu_consumption }
           scale_down_max_time: { get_input: scale_down_max_time }
 
+    - scalability:
+        type: tosca.policies.Scaling.Performance.Consumption.Simple
+        targets: [ magician ]
+        properties:
+          stage: Execution
+          priority: 100
+          max_cpu_consumption: 80
+          min_cpu_consumption: 20
+
     - deployment_connection:
         type: tosca.policies.Placement.Requirement.Connection
         targets: [ magician ]
