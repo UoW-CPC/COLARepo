@@ -70,7 +70,7 @@ topology_template:
     updater:
       type: tosca.nodes.MiCADO.Container.Application.Docker
       properties:
-        command: sh -c "while true; do echo set runs $$(wc -l /tmp/runs | cut -d' ' -f1) | nc test_db 6379; sleep 30; done"
+        command: sh -c "while true; do echo set runs $$(wc -l /tmp/runs | cut -d' ' -f1) | nc db 6379; sleep 30; done"
       artifacts:
         image:
           type: tosca.artifacts.Deployment.Image.Container.Docker
