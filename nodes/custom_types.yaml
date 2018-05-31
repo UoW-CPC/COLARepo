@@ -48,12 +48,24 @@ capability_types:
   tosca.capabilities.MiCADO.Occopus.CloudSigma.Cloud:
     derived_from: tosca.capabilities.Container
     properties:
+      num_cpus:
+        type: integer
+        required: true
+        constraints:
+          - greater_or_equal: 250
+          - less_or_equal: 100000
+      mem_size:
+        type: integer
+        required: true
+        constraints:
+          - greater_or_equal: 268435456
+          - less_or_equal: 137438953472
       libdrive_id:
         type: string
         required: true
       vnc_password:
         type: string
-        required: false
+        required: true
       host_name:
         type: string
         required: false
@@ -75,7 +87,7 @@ capability_types:
       image_id:
         type: string
         required: true
-      flavour_name:
+      flavor_name:
         type: string
         required: true
       tenant_name:
@@ -83,13 +95,13 @@ capability_types:
         required: false
       project_id:
         type: string
-        required: false
+        required: true
       user_domain_name:
         type: string
         required: false
       network_id:
         type: string
-        required: false
+        required: true
       server_name:
         type: string
         required: false
@@ -97,7 +109,7 @@ capability_types:
         type: string
         required: false
       security_groups:
-        type: string
+        type: list
         required: false
       floating_ip:
         type: string
@@ -382,3 +394,4 @@ node_types:
           capability: tosca.capabilities.Attachment
           node: tosca.nodes.MiCADO.Volume.Docker
           relationship: tosca.relationships.AttachesTo
+
