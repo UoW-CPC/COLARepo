@@ -395,3 +395,48 @@ node_types:
           node: tosca.nodes.MiCADO.Volume.Docker
           relationship: tosca.relationships.AttachesTo
 
+policy_types:
+
+  tosca.policies.Scaling.MiCADO:
+    derived_from: tosca.policies.Scaling
+    description: base MiCADO policy defining data sources, constants, queries, alerts, limits and rules
+    properties:
+      sources:
+        type: list
+        description: list of prometheus exporters as data sources
+        required: false
+      constants:
+        type: map
+        description: list of constants referred in other sections
+        required: false
+      alerts:
+        type: list
+        description: list of prometheus alerts
+        required: false
+      queries:
+        type: map
+        description: list of variables and their associated prometheus query
+        required: false
+      stage:
+        type: string
+        description: the stage that will be affected by the policy (not yet implemented)
+        default: started
+        required: false
+      priority:
+        type: integer
+        description: the priority with which the policy will be exectued (not yet implemented)
+        default: 100
+        required: false
+      min_instances:
+        type: integer
+        required: true
+        description: defines the min instances to scale to
+      max_instances:
+        type: integer
+        required: true
+        description: defines the max instances to scale to
+      scaling_rule:
+        type: string
+        description: python code to define scaling rule
+        required: true
+
