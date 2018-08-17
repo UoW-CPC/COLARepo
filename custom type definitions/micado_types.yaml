@@ -37,8 +37,8 @@ capability_types:
       key_name:
         type: string
         required: false
-      security_groups_ids:
-        type: string
+      security_group_ids:
+        type: list
         required: false
       subnet_id:
         type: string
@@ -66,13 +66,13 @@ capability_types:
       vnc_password:
         type: string
         required: true
-      host_name:
-        type: string
-        required: false
       public_key_id:
         type: string
-        required: false
+        required: true
       firewall_policy:
+        type: string
+        required: false
+      host_name:
         type: string
         required: false
       description:
@@ -287,6 +287,10 @@ node_types:
         type: string
         description: network driver
         required: false
+      driver_opts:
+        type: map
+        description: network driver options (incl. mtu)
+        required: false
       ip_version:
         type: integer
         required: false
@@ -439,4 +443,3 @@ policy_types:
         type: string
         description: python code to define scaling rule
         required: true
-

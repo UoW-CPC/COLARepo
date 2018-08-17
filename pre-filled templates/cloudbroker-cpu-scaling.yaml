@@ -1,0 +1,150 @@
+############################### BOILERPLATE ###############################
+
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - https://raw.githubusercontent.com/micado-scale/tosca/master/micado_types.yaml
+
+repositories:
+  docker_hub: https://hub.docker.com/
+
+topology_template:
+
+############################### BOILERPLATE ###############################
+
+############################### INPUTS SECTION ###############################
+
+  inputs:
+    MY_SAMPLE_INPUT:
+      type: string
+      description: retrieve later in template with { get_input : MY_SAMPLE_INPUT }
+      required: false
+      default: SOME_DEFAULT
+
+############################### INPUTS SECTION ###############################
+
+############################### NODE SECTION ###############################
+
+  node_templates:
+
+    #################################
+    ## BEGIN DOCKER CONTAINER NODE
+    ##
+    my-docker-app:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+       ## THIS SECTION SUPPORTS ANY SWARM READY DOCKER-COMPOSE PROPERTY ##
+        ports:
+          - "1234:5678"
+        command: echo 'hello world'
+
+      artifacts:
+       image:
+         type: tosca.artifacts.Deployment.Image.Container.Docker
+         file: MY_DOCKER_IMAGE ## POINTS TO DOCKER IMAGE ##
+         repository: docker_hub ## REFERENCE TOP LEVEL 'repositories' KEY ##
+    ##
+    ## END DOCKER CONTAINER NODE
+    ###############################
+
+    ## COPY THE NODE ABOVE AND CHANGE THE NAME (KEY) TO ADD MORE CONTAINERS ##
+
+    #################################
+    ## BEGIN VIRTUAL MACHINE NODE
+    ##
+    my-virtual-machine:
+      type: tosca.nodes.MiCADO.Occopus.CloudBroker.Compute
+      properties:
+        cloud:
+          interface_cloud: cloudbroker
+          endpoint_cloud: ADD_YOUR_ENDPOINT (e.g https://cola-prototype.cloudbroker.com )
+      capabilities:
+        host:
+          properties:
+            deployment_id: ADD_YOUR_ID_HERE (e.g. e7491688-599d-4344-95ef-aff79a60890e)
+            instance_type_id: ADD_YOUR_ID_HERE (e.g. 9b2028be-9287-4bf6-bbfe-bcbc92f065c0)
+            key_pair_id: ADD_YOUR_ID_HERE (e.g. d865f75f-d32b-4444-9fbb-3332bcedeb75)
+            opened_port: ADD_YOUR_PORTS_HERE (e.g. '22,2377,7946,8300,8301,8302,8500,8600,9100,9200,4789')
+    ##
+    ## END VIRTUAL MACHINE NODE
+    ###############################
+
+############################### NODE SECTION ###############################
+
+############################### POLICY SECTION ###############################
+
+  policies:
+
+    #################################
+    ## BEGIN VIRTUAL MACHINE POLICY
+    ##
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ my-virtual-machine ] ## NAME OF VIRTUAL MACHINE NODE ##
+        properties:
+
+          constants:
+            NODE_TH_MAX: '60' ## CPU THRESHOLD TO TRIGGER SCALE UP ##
+            NODE_TH_MIN: '20' ## CPU THRESHOLD TO TRIGGER SCALE DOWN ##
+
+          alerts:
+          - alert: node_overloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) > {{NODE_TH_MAX}}'
+            for: 1m ## ELAPSED TIME AT UPPER CPU THRESHOLD TO TRIGGER SCALE UP  ##
+          - alert: node_underloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) < {{NODE_TH_MIN}}'
+            for: 1m ## ELAPSED TIME AT LOWER CPU THRESHOLD TO TRIGGER SCALE DOWN  ##
+
+          min_instances: 1 ## MINIMUM NUMBER OF INSTANCES TO SCALE DOWN TO ##
+          max_instances: 4 ## MAXIMUM NUMBER OF INSTANCES TO SCALE UP TO ##
+
+          scaling_rule: |
+            if len(m_nodes) <= m_node_count and m_time_since_node_count_changed > 60:
+              if node_overloaded:
+                m_node_count+=1
+              if node_underloaded:
+                m_node_count-=1
+            else:
+              print('Transient phase, skipping update of nodes...')
+    ##
+    ## END VIRTUAL MACHINE POLICY
+    ###############################
+
+    #################################
+    ## BEGIN DOCKER CONTAINER POLICY
+    ##
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ my-docker-app ] ## NAME OF DOCKER CONTAINER NODE ##
+        properties:
+
+          constants:
+            SERVICE_NAME: 'my-docker-app' ## NAME OF DOCKER CONTAINER NODE ##
+            SERVICE_FULL_NAME: '{{stack}}_my-docker-app' ## NAME OF DOCKER CONTAINER NODE ##
+            SERVICE_TH_MAX: '60' ## CPU THRESHOLD TO TRIGGER SCALE UP ##
+            SERVICE_TH_MIN: '20' ## CPU THRESHOLD TO TRIGGER SCALE DOWN ##
+
+          alerts:
+          - alert: service_overloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 > {{SERVICE_TH_MAX}}'
+            for: 30s ## ELAPSED TIME AT UPPER CPU THRESHOLD TO TRIGGER SCALE UP  ##
+          - alert: service_underloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 < {{SERVICE_TH_MIN}}'
+            for: 30s ## ELAPSED TIME AT LOWER CPU THRESHOLD TO TRIGGER SCALE DOWN  ##
+
+          min_instances: 1 ## MINIMUM NUMBER OF INSTANCES TO SCALE DOWN TO ##
+          max_instances: 3 ## MAXIMUM NUMBER OF INSTANCES TO SCALE UP TO ##
+
+          scaling_rule: |
+            if len(m_nodes) == m_node_count:
+              if service_overloaded and m_node_count > m_container_count:
+                m_container_count+=1
+              if service_underloaded:
+                m_container_count-=1
+            else:
+              print('Transient phase, skipping update of containers...')
+    ##
+    ## END DOCKER CONTAINER POLICY
+    ###############################
+
+############################### POLICY SECTION ###############################

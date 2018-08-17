@@ -1,8 +1,7 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/nodes/custom_types.yaml
-  - https://raw.githubusercontent.com/COLAProject/COLARepo/master/policies/scalability/consumption/tosca_policy_scalability_comsumption.yaml
+  - https://raw.githubusercontent.com/micado-scale/tosca/master/micado_types.yaml
 
 repositories:
   docker_hub: https://hub.docker.com/
@@ -12,90 +11,87 @@ topology_template:
     port_exposed_da:
       type: list
       description: port exposed for data_avenue
-      required: yes
+      required: true
       default: ["8080:8080"]
     port_exposed_mysql:
       type: list
       description: port exposed for mysql
-      required: yes
+      required: true
       default: ["3306:3306"]
     docker_image_proxy:
       type: string
       description: name of docker image of proxy
-      required: yes
+      required: true
       default: haproxy
     docker_image_mysql:
       type: string
       description: name of docker image of mysql
-      required: yes
+      required: true
       default: mysql
     docker_image_data_avenue:
       type: string
       description: name of docker image of data_avenue
-      required: yes
+      required: true
       default: data_avenue
     host_mem:
       type: scalar-unit.size
       description: host mem capacity
-      required: yes
+      required: true
       default: 4 GB
     host_disk:
       type: scalar-unit.size
       description: host disk capacity
-      required: yes
+      required: true
       default: 50 GB
     libdrive_id:
       type: string
       description: id of the instance image to launch
-      required: yes
+      required: true
       default: "some id"
     host_cpu:
       type: integer
       description: cpu of the host
-      required: yes
+      required: true
       default: 2
     mysql_root_password:
       type: string
       description: environment variable to set the root password
-      required: yes
+      required: true
       default: DEFAULT_HERE
     mysql_database:
       type: string
       description: environment variable to set the database name
-      required: yes
+      required: true
       default: DEFAULT_HERE
     mysql_user:
       type: string
       description: environment variable to set the use name
-      required: yes
+      required: true
       default: DEFAULT_HERE
     mysql_password:
       type: string
       description: environment variable to set the password
-      required: yes
+      required: true
       default: DEFAULT_HERE
     max_cpu_consumption:
       type: float
       description: max cpu consumption
-      required: yes
+      required: true
       default: 0.8
-
     min_cpu_consumption:
       type: float
       description: min cpu consumption
-      required: yes
+      required: true
       default: 0.2
-
     scale_up_max_time:
       type: scalar-unit.time
       description: max time to scale up
-      required: yes
+      required: true
       default: 5 m
-
     scale_down_max_time:
       type: scalar-unit.time
       description: max time scale down
-      required: yes
+      required: true
       default: 5 m
 
   node_templates:
@@ -108,16 +104,13 @@ topology_template:
            repository: docker_hub
        requirements:
          - service:
-             node: data_avenue
+             node: data-avenue
              relationship:
                type: tosca.relationships.MiCADO.ConnectsTo
                properties:
                  network: default_net
-         - host:
-             node: VM
-             relationship: tosca.relationships.HostedOn
 
-    data_avenue:
+    data-avenue:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
          ports: { get_input: port_exposed_da }
@@ -133,10 +126,6 @@ topology_template:
                type: tosca.relationships.MiCADO.ConnectsTo
                properties:
                  network: default_net
-         - host:
-             node: VM
-             relationship: tosca.relationships.HostedOn
-
     mysql:
        type: tosca.nodes.MiCADO.Container.Application.Docker
        properties:
@@ -151,41 +140,77 @@ topology_template:
            type: tosca.artifacts.Deployment.Image.Container.Docker
            file: { get_input: docker_image_mysql }
            repository: docker_hub
-       requirements:
-         - host:
-             node: VM
-             relationship: tosca.relationships.HostedOn
 
-    VM:
-       type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
-       properties:
-          cloud:
-            interface_cloud: cloudsigma
-            endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
-
-       capabilities:
-          host:
-            properties:
-              num_cpus: { get_input: host_cpu }
-              disk_size: { get_input: host_disk }
-              mem_size: { get_input: host_mem }
-              libdrive_id: { get_input: libdrive_id }
+    worker_node:
+      type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
+      properties:
+        cloud:
+          interface_cloud: cloudsigma
+          endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
+      capabilities:
+        host:
+          properties:
+            num_cpus: 2000
+            mem_size: 4294967296
+            vnc_password: secret
+            libdrive_id: 390d52b5-4a2c-48ca-af7a-341a051dd09e
+            public_key_id: ADD_YOUR_ID_HERE
+            firewall_policy: ADD_YOUR_ID_HERE
 
   outputs:
     ip_address:
-      value: { get_attribute: [ data_avenue, ip_address ]}
+      value: { get_attribute: [ data-avenue, ip_address ]}
     port:
-      value: { get_attribute: [ data_avenue, port ]}
+      value: { get_attribute: [ data-avenue, port ]}
 
   policies:
-    - consumption:
-        type: tosca.policies.Scaling.Performance.Consumption
-        targets: [ data_avenue ]
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ worker_node ]
         properties:
-          priority: 100
-          trigger_1_id: estimate_completion_time
-          trigger_1_namespace: prometheus
-          max_cpu_consumption: { get_input: max_cpu_consumption }
-          scale_up_max_time: { get_input: scale_up_max_time }
-          min_cpu_consumption: { get_input: min_cpu_consumption }
-          scale_down_max_time: { get_input: scale_down_max_time }
+          constants:
+            NODE_TH_MAX: '60'
+            NODE_TH_MIN: '20'
+          alerts:
+          - alert: node_overloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) > {{NODE_TH_MAX}}'
+            for: 1m
+          - alert: node_underloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) < {{NODE_TH_MIN}}'
+            for: 1m
+          min_instances: 1
+          max_instances: 4
+          scaling_rule: |
+            if len(m_nodes) <= m_node_count and m_time_since_node_count_changed > 60:
+              if node_overloaded:
+                m_node_count+=1
+              if node_underloaded:
+                m_node_count-=1
+            else:
+              print('Transient phase, skipping update of nodes...')
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ data-avenue ]
+        properties:
+          constants:
+            SERVICE_NAME: 'data-avenue'
+            SERVICE_FULL_NAME: '{{stack}}_data-avenue'
+            SERVICE_TH_MAX: '60'
+            SERVICE_TH_MIN: '20'
+          alerts:
+          - alert: service_overloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 > {{SERVICE_TH_MAX}}'
+            for: 30s
+          - alert: service_underloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 < {{SERVICE_TH_MIN}}'
+            for: 30s
+          min_instances: 1
+          max_instances: 3
+          scaling_rule: |
+            if len(m_nodes) == m_node_count:
+              if service_overloaded and m_node_count > m_container_count:
+                m_container_count+=1
+              if service_underloaded:
+                m_container_count-=1
+            else:
+              print('Transient phase, skipping update of containers...')

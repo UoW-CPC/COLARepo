@@ -1,0 +1,161 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - https://raw.githubusercontent.com/micado-scale/tosca/master/micado_types.yaml
+
+repositories:
+  docker_hub: https://hub.docker.com/
+  outlandish_registry: INSERT_REGISTRY_ADDRESS_HERE
+
+topology_template:
+  inputs:
+    DB_HOST:
+      type: string
+      required: true
+    DB_USER:
+      type: string
+      required: true
+    DB_PASSWORD:
+      type: string
+      required: true
+    WP_HOME:
+      type: string
+      required: true
+    WP_SITEURL:
+      type: string
+      required: true
+    APP_IMAGE:
+      type: string
+      required: true
+    WEB_IMAGE:
+      type: string
+      required: true
+
+  node_templates:
+    app:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        deploy:
+          restart_policy:
+            condition: any
+          resources:
+            reservations:
+              cpus: '1.0'
+        environment:
+          DB_HOST: { get_input : DB_HOST }
+          DB_NAME: af_staging
+          MEMCACHE_SERVERS: 'memcached:11211'
+          DB_BOXOFFICE: afboxoffice_staging
+          DB_BOXOFFICE_LIVE: afboxoffice_warehouse_staging
+          DB_USER: { get_input : DB_USER }
+          DB_PASSWORD: { get_input : DB_PASSWORD }
+          WP_HOME: { get_input : WP_HOME }
+          WP_SITEURL: { get_input : WP_SITEURL }
+        volumes:
+          - /dev/null:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+        networks:
+          - application_net
+      artifacts:
+       image:
+         type: tosca.artifacts.Deployment.Image.Container.Docker
+         file: { get_input : APP_IMAGE }
+         repository: outlandish_registry
+
+    web:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        ports:
+          - "80:80"
+        deploy:
+          restart_policy:
+            condition: any
+        networks:
+          - application_net
+      artifacts:
+       image:
+         type: tosca.artifacts.Deployment.Image.Container.Docker
+         file: { get_input : WEB_IMAGE }
+         repository: outlandish_registry
+
+    memcached:
+      type: tosca.nodes.MiCADO.Container.Application.Docker
+      properties:
+        deploy:
+          restart_policy:
+            condition: any
+        networks:
+          - application_net
+      artifacts:
+       image:
+         type: tosca.artifacts.Deployment.Image.Container.Docker
+         file: memcached:alpine
+         repository: docker_hub
+
+    worker_node:
+      type: tosca.nodes.MiCADO.Occopus.EC2.Compute
+      properties:
+        cloud:
+          interface_cloud: ec2
+          endpoint_cloud: https://ec2.eu-west-2.amazonaws.com
+      capabilities:
+        host:
+          properties:
+            region_name: eu-west-2
+            image_id: ami-1234
+            instance_type: t2.medium
+            security_group_ids: [ sg-1234 ]
+
+    application_net:
+      type: tosca.nodes.MiCADO.network.Network.Docker
+
+  policies:
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ worker_node ]
+        properties:
+          constants:
+            NODE_TH_MAX: '60'
+            NODE_TH_MIN: '20'
+          alerts:
+          - alert: node_overloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) > {{NODE_TH_MAX}}'
+            for: 1m
+          - alert: node_underloaded
+            expr: '(100-(avg(rate(node_cpu{group="worker_cluster",mode="idle"}[60s]))*100)) < {{NODE_TH_MIN}}'
+            for: 1m
+          min_instances: 1
+          max_instances: 4
+          scaling_rule: |
+            if len(m_nodes) <= m_node_count and m_time_since_node_count_changed > 60:
+              if node_overloaded:
+                m_node_count+=1
+              if node_underloaded:
+                m_node_count-=1
+            else:
+              print('Transient phase, skipping update of nodes...')
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ app ]
+        properties:
+          constants:
+            SERVICE_NAME: 'app'
+            SERVICE_FULL_NAME: '{{stack}}_app'
+            SERVICE_TH_MAX: '60'
+            SERVICE_TH_MIN: '20'
+          alerts:
+          - alert: service_overloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 > {{SERVICE_TH_MAX}}'
+            for: 30s
+          - alert: service_underloaded
+            expr: 'avg(rate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name="{{SERVICE_FULL_NAME}}"}[30s]))*100 < {{SERVICE_TH_MIN}}'
+            for: 30s
+          min_instances: 1
+          max_instances: 3
+          scaling_rule: |
+            if len(m_nodes) == m_node_count:
+              if service_overloaded and m_node_count > m_container_count:
+                m_container_count+=1
+              if service_underloaded:
+                m_container_count-=1
+            else:
+              print('Transient phase, skipping update of containers...')
