@@ -1,0 +1,56 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - https://raw.githubusercontent.com/micado-scale/tosca/master/micado_types.yaml
+
+repositories:
+  docker_hub: https://hub.docker.com/
+
+topology_template:
+  node_templates:
+    worker_node_VMn:
+      type: tosca.nodes.MiCADO.Occopus.CloudSigma.Compute
+      properties:
+        cloud:
+          interface_cloud: cloudsigma
+          endpoint_cloud: https://zrh.cloudsigma.com/api/2.0
+      capabilities:
+        host:
+          properties:
+            num_cpus: 2000
+            mem_size: 4294967296
+            vnc_password: secret
+            libdrive_id: ADD_IMAGE_ID_FOR_WORKER_NODES_HERE
+            public_key_id: ADD_YOUR_ID_HERE
+            firewall_policy: ADD_YOUR_ID_HERE
+
+  policies:
+    - scalability:
+        type: tosca.policies.Scaling.MiCADO
+        targets: [ worker_node_VMn ]
+        properties:
+          sources:
+          - 'manager.server.vm1.ip.address:8090'
+          constants:
+            AET: 30
+            DEADLINE: 1530270216
+            MAXNODES: 2
+            MAXCONTAINERS: 10
+          queries:
+            REMAININGTIME: '{{DEADLINE}}-time()'
+            ITEMS: 'queue_messages_persistent{queue="saker_tasks"}'
+          min_instances: 1
+          max_instances: '{{MAXNODES}}'
+          scaling_rule: |
+            reqnodes=0
+            if ITEMS>0:
+              reqconts = ceil(AET/(REMAININGTIME/ITEMS)) if REMAININGTIME>0 else MAXCONTAINERS
+              reqnodes = ceil(reqconts/5)
+              if reqnodes<m_node_count-1:
+                m_node_count-=1
+              if reqnodes>m_node_count:
+                m_node_count+=1
+            else:
+              m_node_count = 0
+            print "Number of required nodes:",reqnodes
+            print "Number of requested nodes:",m_node_count
